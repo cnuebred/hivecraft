@@ -16,7 +16,6 @@ const app = () => {
     })
 
     console.log(container.copy().render())
-    console.log()
     console.log(container.render())
     writeFile('index.html', container.render(), (err) => {
         if(err) console.log(err)

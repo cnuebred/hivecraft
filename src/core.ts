@@ -1,8 +1,10 @@
 import { randomBytes } from "crypto"
+import { WrapperType } from "./d"
+import { BrickWorker } from "./worker"
 
-type Wrapper = 'h1'| 'h2'| 'h3'| 'h4' | 'h5'| 'b' | 's' | 'u' | 'i' | 'sup' | 'sub' | 'code' | 'span'
 
-type BrickRenderOptions = {
+
+type BrickRenderOptionsType = {
     close?: boolean
     wrappers?: boolean
     replace?: boolean
@@ -11,7 +13,7 @@ type BrickRenderOptions = {
         end?: string
     }
 }
-const BrickRenderOptionsDefault: BrickRenderOptions = {
+const BrickRenderOptionsDefault: BrickRenderOptionsType = {
     wrappers: true, 
     replace: false,
     replace_global_separator: {
@@ -35,12 +37,7 @@ export class BrickReplacements {
     }
 
 }
-class BrickWorker {
-    constructor(){}
-    click(callback: (cog: any) => void){
-        console.log(callback.toString())
-    }
-}
+
 class  BrickStyle {
 constructor () {}
 
@@ -75,13 +72,13 @@ export class BrickText {
     text: string
     replace: BrickReplacements
     public parent: Brick
-    private wrapper: Wrapper[] = []
+    private wrapper: WrapperType[] = []
     
     constructor(text: string, replace?: BrickReplacements) {
         this.text = text
         this.replace = replace || new BrickReplacements()
     }
-    render(options?: BrickRenderOptions): string {
+    render(options?: BrickRenderOptionsType): string {
         let text = this.text
 
         if(options.replace)
@@ -92,11 +89,11 @@ export class BrickText {
         
         return text
     }
-    wrap(...wraps: Wrapper[]): BrickText {
+    wrap(...wraps: WrapperType[]): BrickText {
         this.wrapper = [...this.wrapper, ...wraps]
         return this
     }
-    copy(){
+    copy(): BrickText{
         const brick_text_copy = new BrickText(this.text)
         brick_text_copy.wrapper = this.wrapper
         brick_text_copy.replace = this.replace
@@ -132,7 +129,7 @@ export class Brick {
         this.worker = worker || new BrickWorker()
         this.attributes.push('$hash', this.hash)
     }
-    render(options: BrickRenderOptions = {}): string {
+    render(options: BrickRenderOptionsType = {}): string {
         options = { ...BrickRenderOptionsDefault, ...options }
 
         const template = []
@@ -156,11 +153,12 @@ export class Brick {
         this.push(brick)
         return brick
     }
-    push(brick_component: Brick | BrickText){
+    push(brick_component: Brick | BrickText): Brick{
         brick_component.parent = this
         this._content.push(brick_component)
+        return this
     }
-    copy(){
+    copy(): Brick{
         const brick_copy = new Brick(this.tag, this.attributes.copy())
         brick_copy.style = this.style
         brick_copy.worker = this.worker
