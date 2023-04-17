@@ -1,8 +1,14 @@
 import { randomBytes } from "crypto"
-import { WrapperType } from "./d"
+import { HashType, QueryType, WrapperType } from "./d"
 import { BrickWorker } from "./worker"
+import { BrickStyle } from "./style"
 
 
+export class BrickTree{
+    private _query: QueryType
+    set query(value: QueryType) { this._query = value }
+    get query() { return this._query }
+}
 
 type BrickRenderOptionsType = {
     close?: boolean
@@ -38,10 +44,6 @@ export class BrickReplacements {
 
 }
 
-class  BrickStyle {
-constructor () {}
-
-}
 export class BrickAttributes {
     private attributes: { [index: string]: string | number | null } = {}
     constructor() { }
@@ -108,12 +110,12 @@ export class BrickText {
 }
 export class Brick {
     type: 'block'
-    _hash: string = randomBytes(4).toString('hex')
+    _hash: HashType = randomBytes(4).toString('hex')
     _content: (BrickText | Brick)[] = []
     _tag: string = 'div'
     public parent: Brick
-    public style: BrickStyle
-    public worker: BrickWorker
+    private _style: BrickStyle
+    private _worker: BrickWorker
     public attributes: BrickAttributes
 
     set tag(value: string) { this._tag = value }
@@ -121,6 +123,18 @@ export class Brick {
     get hash() { return this._hash }
     get chain() { return `${this.parent.chain}.${this.hash}` }
     get query() { return `${this.tag}[${this.hash}]` }
+
+    set worker(value: BrickWorker){
+        value.query = this.query
+        this._worker = value
+    }
+    get worker(){return this._worker}
+
+    set style(value: BrickStyle){
+        value.query = this.query
+        this._style = value
+    }
+    get style(){return this._style}
 
     constructor(tag: string, attributes?: BrickAttributes, style?: BrickStyle,  worker?: BrickWorker) {
         this.tag = tag
@@ -160,8 +174,8 @@ export class Brick {
     }
     copy(): Brick{
         const brick_copy = new Brick(this.tag, this.attributes.copy())
-        brick_copy.style = this.style
-        brick_copy.worker = this.worker
+        brick_copy.style = this.style.copy()
+        brick_copy.worker = this.worker.copy()
         this._content.forEach((item) => {
              brick_copy.push(item.copy())
         })
