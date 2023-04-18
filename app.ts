@@ -11,7 +11,8 @@ const app = () => {
     container.brick('div').text('footer for [lp]').wrap('b').replace.set('[lp]', 'Cube')
 
     const button = container.brick('button')
-    button.worker.click((cog) => {
+    
+    button.worker.click().callback((cog) => {
         cog.proxy.generator = 'ok'
     })
 

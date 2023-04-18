@@ -4,14 +4,9 @@ import { BrickWorker } from "./worker"
 import { BrickStyle } from "./style"
 
 
-export class BrickTree{
-    private _query: QueryType
-    set query(value: QueryType) { this._query = value }
-    get query() { return this._query }
-}
-
 type BrickRenderOptionsType = {
     close?: boolean
+    special?: boolean
     wrappers?: boolean
     replace?: boolean
     replace_global_separator?: {
@@ -20,7 +15,8 @@ type BrickRenderOptionsType = {
     }
 }
 const BrickRenderOptionsDefault: BrickRenderOptionsType = {
-    wrappers: true, 
+    wrappers: true,
+    special: false,
     replace: false,
     replace_global_separator: {
         start: '',
@@ -154,6 +150,8 @@ export class Brick {
         })
 
         template.push(`</${this.tag}>`)
+        if(!options.special)
+            template.push(this.worker.generate().render({special:true}))
 
         return template.join('')
     }

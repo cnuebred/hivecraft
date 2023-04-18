@@ -1,5 +1,6 @@
-import { BrickTree } from "./core"
+import { Brick } from "./core"
 import { EventType, HashType, QueryType } from "./d"
+import { BrickTree } from "./utils"
 
 const worker: any = null
 
@@ -24,17 +25,20 @@ export class BrickEvent {
 
 
 export class BrickWorker extends BrickTree {
-    events: BrickEvent[]
+    events: BrickEvent[] = []
     constructor() { super() }
-    render(): string {
-        const scripts = this.events.join(';')
-        return scripts
+    generate(): Brick {
+        const script = new Brick('script')
+        script.text(
+            this.events.map(item => {return item.render()}).join(';')
+        )
+        return script
     }
     // base_types
-    click() { return this.push('click') }
-    blur() { return this.push('blur') }
+    click() { return this.add('click') }
+    blur() { return this.add('blur') }
     // !base_types
-    push(type: string) {
+    add(type: string) {
         return {
             callback: (callback: EventCallback): BrickWorker => {
                 const event = new BrickEvent(type, this.query)
