@@ -1,6 +1,4 @@
 
-const CARBEE_WORKER = new Worker()
-
 class Tree {
     tree = {}
     proxy = {}
@@ -25,7 +23,8 @@ class Worker extends Tree{
     }
 }
 
-window.onload = () => {
-    CARBEE_WORKER
+const CARBEE_WORKER = new Worker()
 
+window.onload = () => {
+    CARBEE_WORKER.init()
 }
