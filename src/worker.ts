@@ -1,10 +1,16 @@
+import { inspect } from "util";
 import { Brick } from "./core"
 import { EventType, HashType, QueryType } from "./d"
 import { BrickTree } from "./utils"
 
-const worker: any = null
-
-type EventCallback = (cog: any) => void
+type EventCallbackCog = {
+    self: HTMLElement,
+    item: {[index:string]: any},
+    proxy: {[index:string]: any},
+    refs: {[index:string]: any},
+    imports: {[index:string]: any}
+}
+type EventCallback = (cog: EventCallbackCog) => void
 
 export class BrickEvent {
     type: string
@@ -17,7 +23,22 @@ export class BrickEvent {
     set callback(value: EventCallback) { this._callback = value }
     get callback() { return this._callback }
     render() {
-        const script = `worker.$on_event(${this.query}, ${this.type}, ${this.callback})`
+        const script = `(() => {CARBEE_WORKER.$on_event('${this.query}', '${this.type}', ${this.callback})})();`
+        return script
+    }
+}
+
+export class BrickProxy {
+    name: string
+    value: string | number
+    query: QueryType
+    constructor(name:string, value: string | number, query: QueryType) {
+        this.name = name
+        this.value = value
+        this.query = query
+    }
+    render() {
+        const script = `(() => {CARBEE_WORKER.proxy['${this.name}']=${this.value}})();`
         return script
     }
 }
@@ -26,12 +47,18 @@ export class BrickEvent {
 
 export class BrickWorker extends BrickTree {
     events: BrickEvent[] = []
+    proxy: BrickProxy[] = []
     constructor() { super() }
+    empty(): boolean {
+        return this.events.length == 0
+    }
+    join():string{
+        return [...this.events, ...this.proxy].map(item => { return item.render() }).join('')
+    }
     generate(): Brick {
         const script = new Brick('script')
-        script.text(
-            this.events.map(item => {return item.render()}).join(';')
-        )
+        const text = script.text(this.join())
+        text.category = 'script'
         return script
     }
     // base_types
@@ -44,6 +71,11 @@ export class BrickWorker extends BrickTree {
                 const event = new BrickEvent(type, this.query)
                 event.callback = callback
                 this.events.push(event)
+                return this
+            },
+            proxy: (name:string, value?: string | number | null): BrickWorker => {
+                const proxy = new BrickProxy(name, value, this.query)
+                this.proxy.push(proxy)
                 return this
             }
         }
