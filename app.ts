@@ -46,6 +46,9 @@ const app = async () => {
         console.log(cog.item)
         console.log(cog.proxy)
     })
+
+    
+
     // core.bundle()
     core.to_html('index.html')    
 }
