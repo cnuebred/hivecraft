@@ -1,7 +1,7 @@
 import { inspect } from "util";
-import { Brick } from "./core"
+import { Cell } from "./cell"
 import { EventType, HashType, QueryType } from "./d"
-import { BrickTree } from "./utils"
+import { CellTree } from "./utils"
 
 type EventCallbackCog = {
     self: HTMLElement,
@@ -12,7 +12,7 @@ type EventCallbackCog = {
 }
 type EventCallback = (cog: EventCallbackCog) => void
 
-export class BrickEvent {
+export class CellEvent {
     type: string
     query: QueryType
     private _callback: EventCallback
@@ -28,7 +28,7 @@ export class BrickEvent {
     }
 }
 
-export class BrickProxy {
+export class CellProxy {
     name: string
     value: string | number
     query: QueryType
@@ -45,9 +45,9 @@ export class BrickProxy {
 
 
 
-export class BrickWorker extends BrickTree {
-    events: BrickEvent[] = []
-    proxy: BrickProxy[] = []
+export class CellWorker extends CellTree {
+    events: CellEvent[] = []
+    proxy: CellProxy[] = []
     constructor() { super() }
     empty(): boolean {
         return this.events.length == 0
@@ -55,8 +55,8 @@ export class BrickWorker extends BrickTree {
     join():string{
         return [...this.events, ...this.proxy].map(item => { return item.render() }).join('')
     }
-    generate(): Brick {
-        const script = new Brick('script')
+    generate(): Cell {
+        const script = new Cell('script')
         const text = script.text(this.join())
         text.category = 'script'
         return script
@@ -67,21 +67,21 @@ export class BrickWorker extends BrickTree {
     // !base_types
     add(type: string) {
         return {
-            callback: (callback: EventCallback): BrickWorker => {
-                const event = new BrickEvent(type, this.query)
+            callback: (callback: EventCallback): CellWorker => {
+                const event = new CellEvent(type, this.query)
                 event.callback = callback
                 this.events.push(event)
                 return this
             },
-            proxy: (name:string, value?: string | number | null): BrickWorker => {
-                const proxy = new BrickProxy(name, value, this.query)
+            proxy: (name:string, value?: string | number | null): CellWorker => {
+                const proxy = new CellProxy(name, value, this.query)
                 this.proxy.push(proxy)
                 return this
             }
         }
     }
-    copy(): BrickWorker {
-        const worker_copy = new BrickWorker()
+    copy(): CellWorker {
+        const worker_copy = new CellWorker()
         worker_copy.events = [...this.events];
 
         return worker_copy
