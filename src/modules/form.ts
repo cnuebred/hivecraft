@@ -1,10 +1,13 @@
 import { Cell } from "../cell";
 import { CellLocation } from "../d";
 
-export type ConfigBox = {
-    label: (name: string, label: string) => ConfigBox
-    placeholder: (placeholder: string) => ConfigBox
-    value: (value: string) => ConfigBox
+export type FormConfigBox = {
+    label: (name: string, label?: string) => FormConfigBox
+    placeholder: (placeholder: string) => FormConfigBox
+    value: (value: string) => FormConfigBox
+    br: () => FormConfigBox
+    proxy: (ref:string) => FormConfigBox,
+    oninput: (foo_name:string, foo: () => void) => FormConfigBox
 }
 
 export class Form extends Cell {
@@ -14,22 +17,26 @@ export class Form extends Cell {
         this.form_name = name
         this.attributes.set('form', name)
     }
-    config_box = (input: Cell): ConfigBox => {
+    config_box = (input: Cell): FormConfigBox => {
         return {
             label: (name: string, label?: string) => this.label(input, name, label),
             placeholder: (placeholder: string) => this.placeholder(input, placeholder),
-            value: (value: string) => this.value(input, value)
+            value: (value: string) => this.value(input, value),
+            br: () => {this.push(new Cell('br')); return this.config_box(input)},
+            proxy: (ref:string) => this.proxy(input, ref),
+            oninput: (foo_name:string, foo: () => void) => this.oninput(input, foo_name, foo)
+            
         }
     }
-    private value(input: Cell, value: string): ConfigBox {
+    private value(input: Cell, value: string): FormConfigBox {
         input.attributes.set('value', value)
         return this.config_box(input)
     }
-    private placeholder(input: Cell, placeholder: string): ConfigBox {
+    private placeholder(input: Cell, placeholder: string): FormConfigBox {
         input.attributes.set('placeholder', placeholder)
         return this.config_box(input)
     }
-    private label(input: Cell, name: string, label?: string): ConfigBox {
+    private label(input: Cell, name: string, label?: string): FormConfigBox {
         name = name.replaceAll(' ', '_')
         if (label) {
             const label_element = new Cell('label')
@@ -40,7 +47,15 @@ export class Form extends Cell {
         input.attributes.set('name', name)
         return this.config_box(input)
     }
-
+    private proxy(input:Cell, ref: string){
+        input.attributes.set('input-proxy', ref)
+        return this.config_box(input)
+    }
+    private oninput(input:Cell, foo_name, foo: () => void){
+        input.attributes.set('@input', foo_name)
+        input.worker.add('input').event(foo)
+        return this.config_box(input)
+    }
     add(type: string) {
         const input = new Cell('input')
         input.attributes.set('type', type)

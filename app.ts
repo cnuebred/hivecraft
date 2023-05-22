@@ -36,25 +36,29 @@ const app = async () => {
     div.new(':p.container_paragraph')
     .text(texts.text_first)
     div.new(':h2.header_second ' + texts.analyses)
-    // const p_2 = core.cell('p').text('Here is ||little|| description')
-    // p.parent.worker.click().callback((cog) => {
-    //     console.log('pyk')
-    //     console.log(cog.item)
-    //     console.log(cog.self)
-    //     console.log(cog.proxy)
-    //     cog.proxy['little'] = 'ok'
-    //     console.log(cog.imports.crypto.SHA256("Message").toString())
+    const p_3 = core.cell('p').text('Here is ||little|| description')
+    p.parent.worker.click().event((cog) => {
+        console.log('pyks')
+        console.log(cog.item)
+        console.log(cog.self)
+        console.log(cog.proxy)
+        cog.proxy['little'] = 'ok'
+        console.log(cog.imports.crypto.SHA256("Message").toString())
 
-    //     cog.proxy.tg = '10'
-    // })
-    p_2.parent.worker.click().callback((cog) => {
+        cog.proxy.tg = '10'
+    })
+    p_3.parent.worker.click().event((cog) => {
         console.log('pyk')
+        console.log(cog)
         console.log(cog.item)
         console.log(cog.proxy)
     })
 
     const form = new Form('test')
-    form.add('text').label('name', 'Here is name')
+    form.add('text').label('name', 'Here is name').br()
+    form.add('text').placeholder('no ok').label('serio', 'a no tak xD').br()
+    form.add('range').label('rang', 'tak: ||range||').proxy('range').br()
+    form.add('text').label('new_text', 'nowy text').oninput('show', () => {console.log('dupa')})
 
     div.push(form)
 

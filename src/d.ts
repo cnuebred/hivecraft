@@ -14,7 +14,7 @@ export const PATHS = {
 }
 
 export const WORKER_NAME = 'CARBEE_WORKER'
-
+export const SINGLE_MARKS = ['br', 'input']
 export type LibType = {
     local: string,
     variable: string,

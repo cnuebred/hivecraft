@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto"
-import { CellLocation, CellRenderOptionsDefault, CellRenderOptionsType, ForEachFilter, HashType, meta_regex } from "./d"
+import { CellLocation, CellRenderOptionsDefault, CellRenderOptionsType, ForEachFilter, HashType, SINGLE_MARKS, meta_regex } from "./d"
 import { CellStyle } from "./style"
 import { CellText } from "./text"
 import { CellWorker } from "./worker"
@@ -55,7 +55,7 @@ export class Cell {
         return this
     }
     render(options: CellRenderOptionsType = {}): string {
-        options = { ...CellRenderOptionsDefault, ...options }
+        options = { ...CellRenderOptionsDefault, ...options, ...this.cell_render_options_type}
 
         const template = []
         template.push(`<${this.tag} ${this.attributes.render()}>`)
@@ -63,7 +63,8 @@ export class Cell {
         this._content.forEach(item => {
             template.push(item.render(options))
         })
-        options = { ...options, ...this.cell_render_options_type }
+
+        if(!options.close && !SINGLE_MARKS.includes(this.tag))
         template.push(`</${this.tag}>`)
         if (!options.no_script)
             template.push(this.worker.generate().render({ no_script: true }))

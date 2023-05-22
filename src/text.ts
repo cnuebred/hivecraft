@@ -43,7 +43,7 @@ export class CellText {
         if (!options.proxy?.end)
             options.proxy.end = options.proxy.start
         const proxy_span = (match, _1) => `<span proxy_data="${_1}"></span>`
-        this.text = this.text.replaceAll(/\|\|(\w+)\|\|/gm, proxy_span)
+        this.text = this.text.replaceAll(/\|\|([\w.]+)\|\|/gm, proxy_span)
     }
     private attach_wrappers() {
         this.wrapper.map(item => {
