@@ -39,8 +39,10 @@ const app = async () => {
     const p_3 = core.cell('p').text('Here is ||little|| description')
     p.parent.worker.click().event((cog) => {
         console.log('pyks')
+        console.log(cog)
         console.log(cog.item)
         console.log(cog.self)
+        console.log(cog.proxy)
         console.log(cog.proxy)
         cog.proxy['little'] = 'ok'
         console.log(cog.imports.crypto.SHA256("Message").toString())
@@ -52,15 +54,21 @@ const app = async () => {
         console.log(cog)
         console.log(cog.item)
         console.log(cog.proxy)
+        cog.imports.axios({
+            method: 'post',
+            url: 'localhost',
+            data: {kupa:'dupa'}
+        })
     })
 
     const form = new Form('test')
-    form.add('text').label('name', 'Here is name').br()
+    form.add('text').label('name', 'Here is name').proxy('name').br()
     form.add('text').placeholder('no ok').label('serio', 'a no tak xD').br()
     form.add('range').label('rang', 'tak: ||range||').proxy('range').br()
-    form.add('text').label('new_text', 'nowy text').oninput('show', () => {console.log('dupa')})
+    form.add('text').label('new_text', 'nowy text' ).oninput('show', () => {console.log('dupa')})
 
     div.push(form)
+    div.new(':p ||name||')
 
     div.style.import('./app.scss', __dirname)
     core.style.add({
@@ -70,8 +78,26 @@ const app = async () => {
     })
     //p.parent.style.path('./app.scss')
 
-    // core.bundle()
-    core.to_html({'[user]': 'Cube'}, {to_file:'index.html'})
+    //core.bundle()
+    let start = performance.now()
+    const build = await core.build()
+    console.log(`Builded in ${performance.now() - start}`)
+    
+    start = performance.now()
+    build.html({'[user]': 'Cube'}, {to_file:'index.html'})
+    console.log(`Size: ${build.size/1000}kb`)
+    console.log(`Sampled in ${performance.now() - start}`)
+    
+    // start = performance.now()
+    // build.html({'[user]': 'Bob'}, {to_file:'index_bob.html'})
+    // console.log(`Size: ${build.size/1000}kb`)
+    // console.log(`Sampled in ${performance.now() - start}`)
+    
+    // start = performance.now()
+    // build.html({'[user]': 'Carmel'}, {to_file:'index_carmel.html'})
+    // console.log(`Size: ${build.size/1000}kb`)
+    // console.log(`Sampled in ${performance.now() - start}`)
+
 }
 
 app()

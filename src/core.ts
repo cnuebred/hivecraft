@@ -1,12 +1,9 @@
-import { randomBytes } from "crypto"
-import { ForEachFilter, CellRenderOptionsDefault, CellRenderOptionsType, HashType, LibType, PATHS, WORKER_NAME, WrapperType, IMPORT_LIBS_LIST, CoreHtmlConfigRender, CorePdfConfigRender, CellLocation } from "./d"
-import { CellWorker } from "./worker"
-import { CellStyle } from "./style"
+import { CellRenderOptionsType, LibType, PATHS, WORKER_NAME, IMPORT_LIBS_LIST, CoreHtmlConfigRender, CorePdfConfigRender, CellLocation } from "./d"
 import { readFile, writeFile } from "fs/promises"
 import { bundle_script_assets } from "./bundle"
 import { appendFile } from "fs"
-import { CellReplacements } from "./replace"
 import { Cell } from "./cell"
+import { CellReplacements } from "./replace"
 
 export class Core extends Cell {
     html_string: string
@@ -62,7 +59,7 @@ export class Core extends Cell {
         }, { only: 'block' })
     }
 
-    async build(bundle?: boolean, config: CellRenderOptionsType = {}) {
+    async build(bundle: boolean = true, config: CellRenderOptionsType = {}) {
         const script = new Cell('script')
         const style = new Cell('style')
         await this.generate_scripts()
@@ -87,16 +84,32 @@ export class Core extends Cell {
 
         if(config.no_script == undefined) config.no_script = true
         this.html_string = this.render(config)
+        return new Build(this.html_string, this.replace.copy())
+    }
+}
+/**
+ * 
+ */
+export class Build {
+    site: string
+    replace: CellReplacements
+    constructor(site: string, replace: CellReplacements){
+        this.site = site
+        this.replace = replace
+    }
+    get size() {return Buffer.byteLength(this.site)}
+    html(replace: {[index:string]: string}, config: CoreHtmlConfigRender = {}): string{
+        //this.replace.from(replace)
+        let new_site = this.replace.filter(this.site)
 
-    }
-    async to_html(replace: {[index:string]: string}, config: CoreHtmlConfigRender = {}): Promise<string>{
-        await this.build(true, config)
-        this.replace.from(replace)
-        this.html_string = this.replace.filter(this.html_string)
+        const my_replace = new CellReplacements()
+        my_replace.from(replace)
+        new_site = my_replace.filter(new_site) 
+
         if(config.to_file)
-            await writeFile(config.to_file, this.html_string)
-        return this.html_string 
+            writeFile(config.to_file, new_site)
+        return new_site
     }
-    to_pdf(name: string, config?: CorePdfConfigRender) { }
+    pdf(name: string, config?: CorePdfConfigRender) { }
 
 }

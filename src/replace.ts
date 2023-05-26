@@ -17,6 +17,7 @@ export class CellReplacements {
     }
     copy(): CellReplacements {
         const replace_copy = new CellReplacements()
+        replace_copy.separator = this.separator
         replace_copy.from(this.replacement)
         return replace_copy
     }

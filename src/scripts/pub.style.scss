@@ -1,18 +1,1 @@
-$COLOR: white;
-$HOVER_COLOR: red;
 
-body {
-    // margin: 0px;
-    background-color: rgb(190, 207, 245);
-    p {
-        font-size: 16px;
-        color:$COLOR;
-        &:hover{
-            color: $HOVER_COLOR;
-        };
-        // &::after{
-        //     content: '';
-        //     top: calc(23px + 3%);
-        // }
-    }
-}

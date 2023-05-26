@@ -8,6 +8,7 @@ class Tree {
     imports = {}
     forms = {}
     pure = {}
+    params = {}
     constructor() { }
 }
 
@@ -97,7 +98,15 @@ class CoreWorker extends Tree {
             })
         })
     }
+    set_params(){
+        const url_params = new URLSearchParams(window.location.search)
+        const it = url_params.entries()
+        for (let [key, value] of it){
+            this.params[key.toString()] = value.toString()
+        }
+    }
     init(): CoreWorker {
+        this.set_params()
         this.set_imports()
         this.set_refs()
         this.proxy = this.deep_proxy(this.proxy, this.proxy_callback)
@@ -115,7 +124,8 @@ class CoreWorker extends Tree {
                 proxy: this.proxy,
                 refs: this.refs,
                 imports: this.imports,
-                forms: this.forms
+                forms: this.forms,
+                params: this.params
             })
         })
     }

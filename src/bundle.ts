@@ -5,7 +5,7 @@ import autoprefixer from 'autoprefixer';
 
 export const bundle_script_assets = async () => {
     await build({
-        entryPoints: ['./src/scripts/my.worker.ts', './src/scripts/my.style.scss'],
+        entryPoints: ['./src/scripts/process/my.worker.ts', './src/scripts/process/my.style.scss'],
         outdir: './src/scripts/build',
         platform: 'node',
         bundle: true,

@@ -11,7 +11,7 @@ export type FormConfigBox = {
 }
 
 export class Form extends Cell {
-    form_name:string
+    form_name: string
     constructor(name:string) {
         super('div')
         this.form_name = name

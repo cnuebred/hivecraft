@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon --ignore src/scripts --exec npx ts-node app.ts"
+    "dev": "nodemon --ignore src/scripts/build --ignore src/scripts/process --exec npx ts-node app.ts"
   },
   "keywords": [],
   "author": "",
