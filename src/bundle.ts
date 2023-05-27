@@ -1,30 +1,15 @@
-import { build } from 'esbuild'
-import { sassPlugin } from "esbuild-sass-plugin";
-import postcss from 'postcss';
-import autoprefixer from 'autoprefixer';
+import { transform as estransform } from 'esbuild'
+import  {compileString} from 'sass'
 
-export const bundle_script_assets = async () => {
-    await build({
-        entryPoints: ['./src/scripts/process/my.worker.ts', './src/scripts/process/my.style.scss'],
-        outdir: './src/scripts/build',
-        platform: 'node',
-        bundle: true,
+export const transform = async (text, loader) => {
+    if(loader == 'css')
+        text = compileString(text, {style: 'compressed'}).css || ''
+    
+    const response = await estransform(text, {
         minify: true,
-        sourcemap: true,
-        plugins: [
-            sassPlugin({
-                async transform(source) {
-                    const { css } = await postcss(
-                        [autoprefixer]
-                    ).process(source, { from: undefined });
-                    return css;
-                },
-            }),
-        ],
-    }).then(data => {
-        console.log('✨ Build successful ✨')
-    }).catch(err => {
-        console.log(err)
-        process.exit(1);
+        loader: loader,
+        platform: 'node',
+        target: 'es2021'
     })
+    return response.code
 }
