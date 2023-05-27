@@ -3,8 +3,9 @@
         "target": "ES2021",
         "module": "CommonJS",
         "esModuleInterop": true,
-        "sourceMap": true,
-        "outDir": "dist"
+        "sourceMap": false,
+        "outDir": "dist",
+        "declaration": true
     },
     "include": [
         "src/**/*"
