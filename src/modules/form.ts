@@ -56,7 +56,7 @@ export class Form extends Cell {
         input.worker.add('input').event(foo)
         return this.config_box(input)
     }
-    add(type: string) {
+    input(type: string) {
         const input = new Cell('input')
         input.attributes.set('type', type)
         input.attributes.set('data-input', null)
