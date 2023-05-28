@@ -1,6 +1,6 @@
 /node_modules
 /.vscode
-/src/scripts/build
-/src/scripts/process
+/src/pub.worker.ts
 index.html
 app.*
+/dist
