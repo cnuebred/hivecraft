@@ -36,7 +36,7 @@ export class CellStyle extends CellTree {
     classes: string[] = []
     constructor() { super() }
     empty(): boolean{
-        return this.styles.length == 0
+        return this.styles.length == 0 && this.import.length == 0
     }
     join(){
         return this.styles.map(item => {return item.render()}).join(';')
@@ -50,7 +50,8 @@ export class CellStyle extends CellTree {
     import(value: string, dirname: string, url: boolean = false): CellTree {
         if(!url)
             value = path.join(dirname, value).replace(/\\/gm, '/')
-        value = `url(${value})`
+        else
+            value = `url(${value})`
         this.imports.push(value)
         return this
     }

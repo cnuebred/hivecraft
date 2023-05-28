@@ -1,10 +1,11 @@
 import { randomBytes } from "crypto"
-import { CellLocation, CellRenderOptionsDefault, CellRenderOptionsType, ForEachFilter, HashType, SINGLE_MARKS, meta_regex } from "./d"
+import { CellLocation, CellRenderOptionsType, ForEachFilter, HashType, } from "./d"
 import { CellStyle } from "./style"
 import { CellText } from "./text"
 import { CellWorker } from "./worker"
 import { CellAttributes } from "./attributes"
 import { CellReplacements } from "./replace"
+import { CellRenderOptionsDefault, SINGLE_MARKS, meta_regex } from "./utils"
 
 export class Cell {
     private _type: string = 'block'
@@ -100,7 +101,7 @@ export class Cell {
             this.parent._content.splice(this.parent._content.indexOf(this), 0, cell_component)
         return this
     }
-    new(carbee_struct: string, location?: CellLocation, attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker): Cell {
+    add(carbee_struct: string, location?: CellLocation, attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker): Cell {
         const cell = new Cell('div', attributes, replace, style, worker)
         cell.meta_extractor(carbee_struct)
         this.push(cell, location)
