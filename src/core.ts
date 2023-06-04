@@ -35,7 +35,7 @@ export class Core extends Cell {
             if (item.style.empty()) return
             text += item.style.join()
             imports.push(...item.style.imports)
-        }, { only: 'block' })
+        }, { only: 'block', self:true })
 
         for (let item of imports){
             await readFile(item).then(data => {
@@ -50,7 +50,7 @@ export class Core extends Cell {
                 this.forEach(async (item: Cell) => {
             if (item.worker.empty()) return
             text += item.worker.join()
-        }, { only: 'block' })
+        }, { only: 'block', self:true})
         return text
     }
     async build(config: CellRenderOptionsType = {}) {

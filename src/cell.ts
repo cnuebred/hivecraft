@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto"
-import { CellLocation, CellRenderOptionsType, ForEachFilter, HashType, } from "./d"
+import { CellLocation, CellRenderOptionsType, CellStyleObject, ForEachFilter, HashType, } from "./d"
 import { CellStyle } from "./style"
 import { CellText } from "./text"
 import { CellWorker } from "./worker"
@@ -22,9 +22,15 @@ export class Cell {
     private _style: CellStyle
     private _worker: CellWorker
     public replace: CellReplacements
-    public attributes: CellAttributes
+    private _attributes: CellAttributes
     private cell_render_options_type: CellRenderOptionsType
-    set tag(value: string) { this._tag = value }
+    set tag(value: string) {
+         this._tag = value 
+         if(this._worker)
+            this._worker.query = this.query
+         if(this._style)
+            this._style.query = this.query
+        }
     get tag() { return this._tag }
     get hash() { return `v_${this._hash}` }
     get chain() { return `${this.parent.chain}.${this.hash}` }
@@ -35,28 +41,46 @@ export class Cell {
         value.owner = this
         this._worker = value
     }
-    get worker() { return this._worker }
+    get worker(): CellWorker{ return this._worker }
 
-    set style(value: CellStyle) {
-        value.query = this.query
-        value.owner = this
-        this._style = value
+    set style(value: CellStyleObject | CellStyle) {
+        if(value instanceof CellStyle){
+            value.query = this.query
+            value.owner = this
+            this._style = value
+        }else{
+            this._style = new CellStyle()
+            this._style.query = this.query
+            this._style.owner = this
+            this._style.from(value)
+        }
     }
-    get style() { return this._style }
+    get style(): CellStyle { return this._style }
+
+    set attributes(value: {[index:string]: string | number} | CellAttributes){
+        if(value instanceof CellAttributes){
+            this._attributes = value
+        }else{
+            this._attributes = new CellAttributes()
+            this._attributes.from(value)
+        }
+    }
+    get attributes(): CellAttributes{return this._attributes}
+
     constructor(tag: string = 'div', attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker) {
         this.tag = tag
-        this.attributes = attributes || new CellAttributes()
+        this._attributes = attributes || new CellAttributes()
         this.replace = replace || new CellReplacements()
         this.style = style || new CellStyle()
         this.worker = worker || new CellWorker()
-        this.attributes.set('$hash', this.hash)
+        this._attributes.set('$hash', this.hash)
     }
     set_render_options(options: CellRenderOptionsType): Cell {
         this.cell_render_options_type = { ...CellRenderOptionsDefault, ...options }
         return this
     }
     render(options: CellRenderOptionsType = {}): string {
-        options = { ...CellRenderOptionsDefault, ...options, ...this.cell_render_options_type}
+        options = { ...CellRenderOptionsDefault, ...options, ...this.cell_render_options_type }
 
         const template = []
         template.push(`<${this.tag} ${this.attributes.render()}>`)
@@ -65,18 +89,20 @@ export class Cell {
             template.push(item.render(options))
         })
 
-        if(!options.close && !SINGLE_MARKS.includes(this.tag))
-        template.push(`</${this.tag}>`)
+        if (!options.close && !SINGLE_MARKS.includes(this.tag))
+            template.push(`</${this.tag}>`)
         if (!options.no_script)
             template.push(this.worker.generate().render({ no_script: true }))
 
         return template.join('')
     }
     ref(name: string): Cell {
-        this.attributes.set('ref', name)
+        this._attributes.set('ref', name)
         return this
     }
-    text(text: string): CellText {
+    text(text: string, clear: boolean = false): CellText {
+        if(clear)
+            this._content = []
         const text_node = new CellText(text)
         this.push(text_node)
         return text_node
@@ -107,17 +133,22 @@ export class Cell {
         this.push(cell, location)
         return cell
     }
-    forEach(callback: (item: Cell | CellText) => void, filter?: ForEachFilter) {
-        callback(this)
+    forEach(callback: (item: Cell | CellText, index: number) => void, filter?: ForEachFilter, index: number = 0) {
+        if(filter.self)
+            callback(this, index)
+        filter.self = true
         this._content.forEach(element => {
-            if (element instanceof CellText && filter?.only == 'text')
-                callback(element)
-            else if (element instanceof Cell && filter?.only == 'block')
-                element.forEach(callback, filter)
+            if (element instanceof CellText && (!filter?.only || filter?.only == 'text'))
+            callback(element, index)
+            
+            if (element instanceof Cell && (!filter?.only || filter?.only == 'block'))
+            if (!filter.tag || filter.tag.includes(element.tag))
+                element.forEach(callback, filter, index)
+            index++
         })
     }
     copy(): Cell {
-        const cell_copy = new Cell(this.tag, this.attributes.copy(), this.replace.copy())
+        const cell_copy = new Cell(this.tag, this._attributes.copy(), this.replace.copy())
         cell_copy.style = this.style.copy()
         cell_copy.worker = this.worker.copy()
         this._content.forEach((item) => {
@@ -127,10 +158,10 @@ export class Cell {
     }
     private meta_extractor(carbee_struct: string) {
         const [meta, ...content] = carbee_struct.split(' ')
-        this._tag = meta.match(meta_regex.tag)?.[0]
-        this.attributes.set('id', meta.match(meta_regex.id)?.[0] || '')
-        this.attributes.append('class', meta.match(meta_regex.class)?.join(' ') || '')
-        this.attributes.set('ref', meta.match(meta_regex.ref)?.[0] || '')
+        this.tag = meta.match(meta_regex.tag)?.[0]
+        this._attributes.set('id', meta.match(meta_regex.id)?.[0] || '')
+        this._attributes.append('class', meta.match(meta_regex.class)?.join(' ') || '')
+        this._attributes.set('ref', meta.match(meta_regex.ref)?.[0] || '')
 
         this.text(content.join(' '))
     }
