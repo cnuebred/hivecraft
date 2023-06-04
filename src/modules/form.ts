@@ -14,6 +14,10 @@ export class Form extends Cell {
     form_name: string
     constructor(name:string) {
         super('div')
+        
+        if (name.match(/([\W\d])/))
+        throw new Error('Name of form cannot include symbols and digits')
+
         this.form_name = name
         this.attributes.set('form', name)
     }
