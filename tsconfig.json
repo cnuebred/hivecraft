@@ -9,8 +9,8 @@
     },
     "include": [
         "src/**/*"
-      ],
+, "cdn"      ],
     "exclude": [
-        "src/scripts/**/*"
+        "cdn/**/*.ts"
     ]
 }

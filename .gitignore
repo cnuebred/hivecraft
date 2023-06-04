@@ -1,6 +1,6 @@
 /node_modules
 /.vscode
-/src/pub.worker.ts
+/cdn/pub.worker.ts
 index.html
 app.*
 /dist

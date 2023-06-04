@@ -1,23 +1,29 @@
 {
-  "name": "carbee",
+  "name": "@cnuebred/carbee",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "Carbee is an package that allows you to create dynamic web pages using declarative JavaScript code. With Carbee, you can easily generate interactive elements such as forms and tables, manipulate them, and create stylish interfaces. The package also provides integration with libraries like axios and CryptoJS, enabling network requests and data encryption.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "dev": "nodemon --ignore src/scripts/build --ignore src/scripts/process --exec npx ts-node app.ts"
+    "build": "npx tsc",
+    "dev": "nodemon --ignore src/scripts/build --ignore src/scripts/process --exec npx ts-node app.ts",
+    "dev:pub:worker": "nodemon cdn/pub.worker.ts --exec tsc cdn/pub.worker.ts --downlevelIteration --outdir ./"
   },
   "keywords": [],
-  "author": "",
+  "author": "Cube @cnuebred (jonathan)",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^18.15.11",
-    "autoprefixer": "^10.4.14",
     "esbuild": "^0.17.18",
-    "esbuild-sass-plugin": "^2.9.0",
-    "postcss": "^8.4.23",
-    "postcss-combine-media-query": "^1.0.1",
-    "postcss-preset-env": "^8.3.2",
     "sass": "^1.62.1",
     "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.1.3"
   }
 }
