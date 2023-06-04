@@ -1,10 +1,9 @@
 import { readFile } from "fs";
-import { CSSList, QueryType } from "./d";
+import { CSSList, CssObject, QueryType } from "./d";
 import { CellTree } from "./utils";
 import { Cell } from "./cell";
 import path from "path";
 
-type CssObject = {[index in keyof CSSList]?: string}
 
 const change_to_css_style = (key) => {
     return key.replaceAll(/([a-z])([A-Z])/gm, '$1-$2').toLowerCase()
@@ -47,9 +46,10 @@ export class CellStyle extends CellTree {
         text.category = 'style'
         return script
     }
-    import(value: string, dirname: string, url: boolean = false): CellTree {
-        if(!url)
-            value = path.join(dirname, value).replace(/\\/gm, '/')
+    import(value: string): CellTree {
+        const is_url = value.match(/http|https/gm)
+        if(!is_url)
+            value = path.resolve(value)
         else
             value = `url(${value})`
         this.imports.push(value)
@@ -58,6 +58,15 @@ export class CellStyle extends CellTree {
     add(styleObject: StyleObject){
         const style_entity = new CellStyleEntity(`${this.query} ${styleObject.query || ''}`, styleObject.style)
         this.styles.push(style_entity)
+    }
+    from(style: object){
+        if(style['import']){
+            style['import'].forEach(item => {
+                this.import(item)
+            })
+            delete style['import']
+        }
+        this.add({style})
     }
     class(...names: string[]){
         names.forEach(name => {

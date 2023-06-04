@@ -1,6 +1,7 @@
+type AttrType = { [index: string]: string | number | null }
 export class CellAttributes {
-    private attributes: { [index: string]: string | number | null } = {}
-    constructor() { }
+    private attributes: AttrType = {}
+    constructor() {}
     render(): string {
         return Object.entries(this.attributes).map(([key, value]) => {
             if (!value) return `${key}`
@@ -9,7 +10,7 @@ export class CellAttributes {
         }).join(' ')
     }
     append(key: string, value: string | number | null): CellAttributes {
-        this.attributes[key] = [this.get(key) || '', value.toString()].join(' ')
+        this.attributes[key] = `${this.get(key) || ''} ${value.toString()}`.trim()
         return this
     }
     set(key: string, value: string | number | null): CellAttributes {
