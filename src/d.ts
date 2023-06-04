@@ -11,7 +11,9 @@ export type LibType = {
 }
 
 export type ForEachFilter = {
+    self?: boolean
     only?: 'block' | 'text'
+    tag?: string[]
 }
 
 export type CSSList = CSSStyleDeclaration
@@ -50,3 +52,9 @@ export enum CellLocation {
     Before,
     After
 }
+
+export type CssObject = {[index in keyof CSSList]?: string}
+
+export type CellStyleObject = {
+    import?: string[]    
+} & CssObject
