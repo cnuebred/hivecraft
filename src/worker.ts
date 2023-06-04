@@ -6,9 +6,16 @@ import { CellTree } from "./utils"
 type CallbackCog = {
     self: HTMLElement,
     item: {[index:string]: any},
-    proxy: {[index:string]: any},
-    refs: {[index:string]: any},
-    imports: {[index:string]: any}
+    data: {
+        proxy: {[index:string]: any},
+        refs: {[index:string]: any},
+        params: {[index:string]: any},
+    },
+    ext: {
+        table: {[index:string]: any},
+        form: {[index:string]: any},
+        imports: {[index:string]: any},
+    }
 }
 type Callback = (cog: CallbackCog) => void
 
@@ -81,8 +88,8 @@ export class CellWorker extends CellTree {
         return script
     }
     // base_types
-    click() { return this.add('click') }
-    blur() { return this.add('blur') }
+    click = this.add('click')
+    blur = this.add('blur')
     // !base_types
     add(name: string) {
         return {
