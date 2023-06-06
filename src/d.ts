@@ -7,7 +7,10 @@ export type LibType = {
     variable: string,
     href: string,
     hash?: string,
-    priority?: boolean
+    priority?: boolean,
+    crossorigin?: string,
+    referrerpolicy?: string,
+    type?: string
 }
 
 export type ForEachFilter = {

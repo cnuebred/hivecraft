@@ -1,4 +1,4 @@
-type AttrType = { [index: string]: string | number | null }
+type AttrType = { [index: string]: string | number | null | boolean }
 export class CellAttributes {
     private attributes: AttrType = {}
     constructor() {}
@@ -18,11 +18,11 @@ export class CellAttributes {
         this.attributes = { ...this.attributes, ...{ [key]: value } }
         return this
     }
-    from(attributes: { [index: string]: string | number | null }): CellAttributes {
+    from(attributes: { [index: string]: string | number | null | boolean}): CellAttributes {
         this.attributes = { ...this.attributes, ...attributes }
         return this
     }
-    get(key: string): string | number | null {
+    get(key: string): string | number | null | boolean {
         return this.attributes[key] || null
     }
     copy() {

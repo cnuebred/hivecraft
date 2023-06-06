@@ -1,13 +1,13 @@
 export class CellReplacements {
-    replacement: { [index: string]: string } = {}
+    replacement: { [index: string]: string | number} = {}
     separator: string = ''
     filter(text: string): string {
         Object.entries(this.replacement).forEach(([key, value]) => {
-            text = text.replaceAll(key, value)
+            text = text.replaceAll(key, value.toString())
         })
         return text
     }
-    from(attributes: { [index: string]: string }): CellReplacements {
+    from(attributes: { [index: string]: string | number}): CellReplacements {
         this.replacement = { ...this.replacement, ...attributes }
         return this
     }

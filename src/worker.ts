@@ -88,8 +88,8 @@ export class CellWorker extends CellTree {
         return script
     }
     // base_types
-    click = this.add('click')
-    blur = this.add('blur')
+    click = this.add('click').event
+    blur = this.add('blur').event
     // !base_types
     add(name: string) {
         return {

@@ -21,7 +21,7 @@ export class Cell {
     public parent: Cell
     private _style: CellStyle
     private _worker: CellWorker
-    public replace: CellReplacements
+    private _replace: CellReplacements
     private _attributes: CellAttributes
     private cell_render_options_type: CellRenderOptionsType
     set tag(value: string) {
@@ -57,7 +57,7 @@ export class Cell {
     }
     get style(): CellStyle { return this._style }
 
-    set attributes(value: {[index:string]: string | number} | CellAttributes){
+    set attributes(value: {[index:string]: string | number | boolean} | CellAttributes){
         if(value instanceof CellAttributes){
             this._attributes = value
         }else{
@@ -66,6 +66,16 @@ export class Cell {
         }
     }
     get attributes(): CellAttributes{return this._attributes}
+
+    set replace(value: {[index:string]: string | number} | CellReplacements){
+        if(value instanceof CellReplacements){
+            this._replace = value
+        }else{
+            this._replace = new CellReplacements()
+            this._replace.from(value)
+        }
+    }
+    get replace(): CellReplacements{return this._replace}
 
     constructor(tag: string = 'div', attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker) {
         this.tag = tag

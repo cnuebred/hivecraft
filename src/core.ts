@@ -6,8 +6,23 @@ import { Cell } from "./cell"
 import { CellReplacements } from "./replace"
 
 export class Core extends Cell {
-    html_string: string
+    html_string: string = ''
+    header: Cell
     constructor() { super('core') }
+    private header_constructor(init: boolean): void{
+        this.header = new Cell('head')
+        if(!init) return
+        this.header.add(':meta').attributes = {charset: 'UTF-8'}
+        // this.header.add(':meta').attributes = {'http-equiv': 'X-UA-Compatible', content: 'IE=edge'}
+        this.header.add(':meta').attributes = {name: "viewport", content: 'width=device-width, initial-scale=1.0'}
+        this.header.add(':title TITLE').replace = {TITLE: 'Document'}
+        /*
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        */
+    }
     async push_lib(lib: LibType) {
         lib.priority = true
         IMPORT_LIBS_LIST.push(lib)
@@ -16,17 +31,19 @@ export class Core extends Cell {
     private async import_libs(lib:string) {
         const libs = IMPORT_LIBS_LIST.find(item => item.local == lib)
         if (!libs) return
-        const {local, variable, href, hash} = libs
-            const href_lib = new Cell('script')
-            href_lib.attributes.from({
-                ref_href_lib: local,
-                name_href_lib: variable,
-                src: href,
-                integrity: hash,
-                crossorigin: 'anonymous',
-                referrerpolicy: 'no-referrer',
-            })
-            this.push(href_lib, CellLocation.Start)
+        const {local, variable, hash, href, crossorigin, referrerpolicy} = libs
+
+        const default_lib_set = {
+            ref_href_lib: local,
+            name_href_lib: variable,
+            src: href,
+            integrity: hash || '',
+            crossorigin: crossorigin || 'anonymous',
+            referrerpolicy: referrerpolicy || 'no-referrer',
+        }
+        const href_lib = new Cell('script')
+            href_lib.attributes.from(default_lib_set)
+            this.header.push(href_lib, CellLocation.End)
     }
     private async generate_styles() {
         let text = ''
@@ -56,6 +73,8 @@ export class Core extends Cell {
     async build(config: CellRenderOptionsType = {}) {
         const script = new Cell('script')
         const style = new Cell('style')
+        this.header_constructor(true)
+
         const script_raw = await this.generate_scripts()
         const style_raw = await this.generate_styles()
 
@@ -74,10 +93,11 @@ export class Core extends Cell {
         const libs_to_import = ['CARBEE_WORKER']
         for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm))libs_to_import.push(match[4])
         
-        libs_to_import.filter((item, index, arr) => arr.indexOf(item) == index).forEach(async item => await this.import_libs(item))
+        libs_to_import.filter((item, index, arr) => arr.indexOf(item) == index)
+        .forEach(async item => await this.import_libs(item))
 
         if (config.no_script == undefined) config.no_script = true
-        this.html_string = this.render(config)
+        this.html_string = this.header.render(config) + this.render(config)
         return new Build(this.html_string, this.replace.copy())
     }
 }
