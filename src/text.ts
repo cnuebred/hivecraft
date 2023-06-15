@@ -7,15 +7,22 @@ export class CellText {
     text: string
     replace: CellReplacements
     private _category: string = 'text'
-    public parent: Cell
+    private _parent: Cell
     private wrapper: WrapperType[] = []
 
     get category() { return this._category }
     set category(value: string) { this._category = value }
 
+    set parent(value: Cell){
+        this._parent = value
+        this.replace = value.replace || new CellReplacements()
+    }
+    get parent(){
+        return this._parent
+    }
     constructor(text: string, replace?: CellReplacements) {
         this.text = text
-        this.replace = replace || new CellReplacements()
+        this.replace = replace
     }
     render(options?: CellRenderOptionsType): string {
         if (options?.replace)
