@@ -18,7 +18,7 @@ export class Cell {
     _hash: HashType = randomBytes(4).toString('hex')
     _content: (CellText | Cell)[] = []
     _tag: string = 'div'
-    public parent: Cell
+    private _parent: Cell
     private _style: CellStyle
     private _worker: CellWorker
     private _replace: CellReplacements
@@ -35,6 +35,14 @@ export class Cell {
     get hash() { return `v_${this._hash}` }
     get chain() { return `${this.parent.chain}.${this.hash}` }
     get query() { return `${this.tag}[${this.hash}]` }
+
+    set parent(value: Cell){
+        this._parent = value
+        this.replace = value.replace || new CellReplacements()
+    }
+    get parent(){
+        return this._parent
+    }
 
     set worker(value: CellWorker) {
         value.query = this.query
@@ -98,7 +106,7 @@ export class Cell {
         this._content.forEach(item => {
             template.push(item.render(options))
         })
-
+        
         if (!options.close && !SINGLE_MARKS.includes(this.tag))
             template.push(`</${this.tag}>`)
         if (!options.no_script)
@@ -117,9 +125,9 @@ export class Cell {
         this.push(text_node)
         return text_node
     }
-    cell(tag: string, attributes?: CellAttributes): Cell {
-        const cell = new Cell(tag, attributes)
-        this.push(cell)
+    cell(tag: string, location?: CellLocation, attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker): Cell {
+        const cell = new Cell(tag, attributes, replace, style, worker)
+        this.push(cell, location)
         return cell
     }
     push(cell_component: Cell | CellText, location: CellLocation = CellLocation.End): Cell {
