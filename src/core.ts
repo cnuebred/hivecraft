@@ -7,21 +7,16 @@ import { CellReplacements } from "./replace"
 
 export class Core extends Cell {
     html_string: string = ''
-    header: Cell
+    private _header: Cell
     constructor() { super('core') }
+    get header(): Cell {return this._header}
     private header_constructor(init: boolean): void{
-        this.header = new Cell('head')
+        this._header = new Cell('head')
         if(!init) return
-        this.header.add(':meta').attributes = {charset: 'UTF-8'}
-        // this.header.add(':meta').attributes = {'http-equiv': 'X-UA-Compatible', content: 'IE=edge'}
-        this.header.add(':meta').attributes = {name: "viewport", content: 'width=device-width, initial-scale=1.0'}
-        this.header.add(':title TITLE').replace = {TITLE: 'Document'}
-        /*
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-        */
+        this._header.add(':meta').attributes = {charset: 'UTF-8'}
+        this.header.add(':meta').attributes = {'http-equiv': 'X-UA-Compatible', content: 'IE=edge'}
+        this._header.add(':meta').attributes = {name: "viewport", content: 'width=device-width, initial-scale=1.0'}
+        this._header.add(':title TITLE').replace = {TITLE: 'Document'}
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -43,7 +38,7 @@ export class Core extends Cell {
         }
         const href_lib = new Cell('script')
             href_lib.attributes.from(default_lib_set)
-            this.header.push(href_lib, CellLocation.End)
+            this._header.push(href_lib, CellLocation.End)
     }
     private async generate_styles() {
         let text = ''
@@ -97,7 +92,7 @@ export class Core extends Cell {
         .forEach(async item => await this.import_libs(item))
 
         if (config.no_script == undefined) config.no_script = true
-        this.html_string = this.header.render(config) + this.render(config)
+        this.html_string = this._header.render(config) + this.render(config)
         return new Build(this.html_string, this.replace.copy())
     }
 }
