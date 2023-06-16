@@ -12,7 +12,22 @@
     "dev": "nodemon --ignore src/scripts/build --ignore src/scripts/process --exec npx ts-node app.ts",
     "dev:pub:worker": "nodemon cdn/pub.worker.ts --exec tsc cdn/pub.worker.ts --downlevelIteration --outdir ./"
   },
-  "keywords": [],
+  "keywords": [
+    "craft",
+    "carbon",
+    "cube",
+    "cnuebred",
+    "editor",
+    "HTML",
+    "template",
+    "HTML5",
+    "JS",
+    "CSS",
+    "framework",
+    "generator",
+    "html generator",
+    "hive"
+  ],
   "author": "Cube @cnuebred (jonathan)",
   "license": "ISC",
   "dependencies": {
