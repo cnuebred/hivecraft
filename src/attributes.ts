@@ -9,8 +9,8 @@ export class CellAttributes {
             return `${key}="${value}"`
         }).join(' ')
     }
-    append(key: string, value: string | number | null): CellAttributes {
-        this.attributes[key] = `${this.get(key) || ''} ${value.toString()}`.trim()
+    append(key: string, value: string | number | null, separator:string = ' '): CellAttributes {
+        this.attributes[key] = `${this.get(key) || ''}${separator}${value.toString()}`.trim()
         return this
     }
     set(key: string, value: string | number | null): CellAttributes {
