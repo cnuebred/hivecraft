@@ -7,7 +7,10 @@ export class CellReplacements {
         })
         return text
     }
-    from(attributes: { [index: string]: string | number}): CellReplacements {
+    from(attributes: { [index: string]: string | number} | CellReplacements = {}): CellReplacements {
+        if (attributes instanceof CellReplacements)
+            attributes = attributes.replacement
+
         this.replacement = { ...this.replacement, ...attributes }
         return this
     }

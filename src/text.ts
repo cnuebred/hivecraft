@@ -5,7 +5,7 @@ import { CellReplacements } from "./replace"
 export class CellText {
     type: string = 'text'
     text: string
-    replace: CellReplacements
+    private _replace: CellReplacements
     private _category: string = 'text'
     private _parent: Cell
     private wrapper: WrapperType[] = []
@@ -15,14 +15,25 @@ export class CellText {
 
     set parent(value: Cell){
         this._parent = value
-        this.replace = value.replace || new CellReplacements()
+        this.replace.from(value.replace)
     }
     get parent(){
         return this._parent
     }
+    set replace(value: {[index:string]: string | number} | CellReplacements){
+        if(value instanceof CellReplacements){
+            this._replace = value
+        }else{
+            this._replace = new CellReplacements()
+            this._replace.from(value)
+        }
+    }
+    get replace(): CellReplacements{ return this._replace.from(this.parent?.replace)}
+
+
     constructor(text: string, replace?: CellReplacements) {
         this.text = text
-        this.replace = replace
+        this.replace = replace || new CellReplacements()
     }
     render(options?: CellRenderOptionsType): string {
         if (options?.replace)

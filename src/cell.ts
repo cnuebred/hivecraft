@@ -38,7 +38,7 @@ export class Cell {
 
     set parent(value: Cell){
         this._parent = value
-        this.replace = value.replace || new CellReplacements()
+        this.replace.from(value.replace)
     }
     get parent(){
         return this._parent
@@ -83,7 +83,7 @@ export class Cell {
             this._replace.from(value)
         }
     }
-    get replace(): CellReplacements{return this._replace}
+    get replace(): CellReplacements{return this._replace.from(this.parent?.replace)}
 
     constructor(tag: string = 'div', attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker) {
         this.tag = tag
@@ -98,18 +98,19 @@ export class Cell {
         return this
     }
     render(options: CellRenderOptionsType = {}): string {
-        options = { ...CellRenderOptionsDefault, ...options, ...this.cell_render_options_type }
+        this.set_render_options(options)
 
         const template = []
         template.push(`<${this.tag} ${this.attributes.render()}>`)
 
         this._content.forEach(item => {
-            template.push(item.render(options))
+            console.log(item.type)
+            template.push(item.render(this.cell_render_options_type))
         })
         
-        if (!options.close && !SINGLE_MARKS.includes(this.tag))
+        if (!this.cell_render_options_type.close && !SINGLE_MARKS.includes(this.tag))
             template.push(`</${this.tag}>`)
-        if (!options.no_script)
+        if (!this.cell_render_options_type.no_script)
             template.push(this.worker.generate().render({ no_script: true }))
 
         return template.join('')
@@ -145,9 +146,9 @@ export class Cell {
             this.parent._content.splice(this.parent._content.indexOf(this), 0, cell_component)
         return this
     }
-    add(carbee_struct: string, location?: CellLocation, attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker): Cell {
+    add(hivecraft_struct: string, location?: CellLocation, attributes?: CellAttributes, replace?: CellReplacements, style?: CellStyle, worker?: CellWorker): Cell {
         const cell = new Cell('div', attributes, replace, style, worker)
-        cell.meta_extractor(carbee_struct)
+        cell.meta_extractor(hivecraft_struct)
         this.push(cell, location)
         return cell
     }
@@ -174,8 +175,8 @@ export class Cell {
         })
         return cell_copy
     }
-    private meta_extractor(carbee_struct: string) {
-        const [meta, ...content] = carbee_struct.split(' ')
+    private meta_extractor(hivecraft_struct: string) {
+        const [meta, ...content] = hivecraft_struct.split(' ')
         this.tag = meta.match(meta_regex.tag)?.[0]
         this._attributes.set('id', meta.match(meta_regex.id)?.[0] || '')
         this._attributes.append('class', meta.match(meta_regex.class)?.join(' ') || '')

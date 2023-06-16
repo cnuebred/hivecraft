@@ -63,7 +63,7 @@ export class Core extends Cell {
     }
     private async generate_scripts() {
         let text = ''
-        text += `let CARBEE_WORKER; CARBEE_WORKER = new CoreWorker().init();`
+        text += `let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new CoreWorker().init();`
                 this.forEach(async (item: Cell) => {
             if (item.worker.empty()) return
             text += item.worker.join()
@@ -90,7 +90,7 @@ export class Core extends Cell {
 
         this.push(script)
         this.push(style)
-        const libs_to_import = ['CARBEE_WORKER']
+        const libs_to_import = ['HIVECRAFT_WORKER']
         for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm))libs_to_import.push(match[4])
         
         libs_to_import.filter((item, index, arr) => arr.indexOf(item) == index)

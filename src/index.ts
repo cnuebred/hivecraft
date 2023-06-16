@@ -22,6 +22,6 @@ export {
     CellText,
     CellRenderOptionsDefault,
     CellWorker,
-    Form as CarbeeForm,
-    Table as CarbeeTable
+    Form as HivecraftForm,
+    Table as HivecraftTable
 }

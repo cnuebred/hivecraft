@@ -35,7 +35,7 @@ export class CellEvent extends WorkerCellPoint {
     set callback(value: Callback) { this._callback = value }
     get callback() { return this._callback }
     render(): string {
-        const script = `(() => {CARBEE_WORKER.$on_event('${this.query}', '${this.type}', ${this.callback})})();`
+        const script = `(() => {HIVECRAFT_WORKER.$on_event('${this.query}', '${this.type}', ${this.callback})})();`
         return script
     }
 }
@@ -50,7 +50,7 @@ export class CellPure extends WorkerCellPoint{
     set callback(value: Callback) { this._callback = value }
     get callback() { return this._callback }
     render() {
-        const script = `(() => {CARBEE_WORKER.pure['${this.name.replaceAll(/ /gm, '_')}'] = ${this.callback}})();`
+        const script = `(() => {HIVECRAFT_WORKER.pure['${this.name.replaceAll(/ /gm, '_')}'] = ${this.callback}})();`
         return script
     }
 }
@@ -65,7 +65,7 @@ export class CellProxy  extends WorkerCellPoint{
         this.query = query
     }
     render() {
-        const script = `(() => {CARBEE_WORKER.proxy['${this.name}']=${this.value}})();`
+        const script = `(() => {HIVECRAFT_WORKER.proxy['${this.name}']=${this.value}})();`
         return script
     }
 }

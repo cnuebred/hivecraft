@@ -1,7 +1,7 @@
 {
-  "name": "@cnuebred/carbee",
+  "name": "@cnuebred/hivecraft",
   "version": "1.0.0",
-  "description": "Carbee is an package that allows you to create dynamic web pages using declarative JavaScript code. With Carbee, you can easily generate interactive elements such as forms and tables, manipulate them, and create stylish interfaces. The package also provides integration with libraries like axios and CryptoJS, enabling network requests and data encryption.",
+  "description": "Hivecraft is an package that allows you to create dynamic web pages using declarative JavaScript code. With Hivecraft, you can easily generate interactive elements such as forms and tables, manipulate them, and create stylish interfaces. The package also provides integration with libraries like axios and CryptoJS, enabling network requests and data encryption.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [

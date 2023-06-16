@@ -12,7 +12,7 @@ export class CellTree{
     get owner() { return this._owner }
 }
 
-export const WORKER_NAME = 'CARBEE_WORKER'
+export const WORKER_NAME = 'HIVECRAFT_WORKER'
 
 export const SINGLE_MARKS = ['br', 'input']
 
@@ -50,9 +50,9 @@ export const IMPORT_LIBS_LIST: LibType[] = [
         hash: 'sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ=='
     },
     {
-        local: 'CARBEE_WORKER',
-        variable: 'CARBEE_WORKER',
-        href: 'https://cdn.jsdelivr.net/gh/cnuebred/carbee-public-worker@8a320391dfcb87fa1236ec5899af188a19e9e7d3/pub.worker.js',
+        local: 'HIVECRAFT_WORKER',
+        variable: 'HIVECRAFT_WORKER',
+        href: 'https://cdn.jsdelivr.net/gh/cnuebred/hivecraft-public-worker@minify/pub/min/pub.worker.min.js',
         hash: ''
     },
 ]
