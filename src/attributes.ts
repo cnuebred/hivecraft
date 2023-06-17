@@ -4,12 +4,12 @@ export class CellAttributes {
     constructor() {}
     render(): string {
         return Object.entries(this.attributes).map(([key, value]) => {
-            if (!value) return `${key}`
             if (key.startsWith('$')) return `${value}`
             return `${key}="${value}"`
         }).join(' ')
     }
     append(key: string, value: string | number | null, separator:string = ' '): CellAttributes {
+        if(value == '') return this
         this.attributes[key] = `${this.get(key) || ''}${separator}${value.toString()}`.trim()
         return this
     }
