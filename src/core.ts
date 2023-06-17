@@ -8,7 +8,10 @@ import { CellReplacements } from "./replace"
 export class Core extends Cell {
     html_string: string = ''
     private _header: Cell
-    constructor() { super('core') }
+    constructor() { 
+        super('core')
+        this.header_constructor(false) 
+}
     get header(): Cell {return this._header}
     private header_constructor(init: boolean): void{
         this._header = new Cell('head')
