@@ -23,7 +23,7 @@ export class Cell {
     private _worker: CellWorker
     private _replace: CellReplacements
     private _attributes: CellAttributes
-    private cell_render_options_type: CellRenderOptionsType
+    private cell_render_options_type: CellRenderOptionsType = {}
     set tag(value: string) {
          this._tag = value 
          if(this._worker)
@@ -33,7 +33,7 @@ export class Cell {
         }
     get tag() { return this._tag }
     get hash() { return `v_${this._hash}` }
-    get chain() { return `${this.parent.chain}.${this.hash}` }
+    get chain() { return `${this.parent?.chain || ''}.${this.hash}` }
     get query() { return `${this.tag}[${this.hash}]` }
 
     set parent(value: Cell){
@@ -95,16 +95,15 @@ export class Cell {
     }
     set_render_options(options: CellRenderOptionsType): Cell {
         this.cell_render_options_type = { ...CellRenderOptionsDefault, ...options }
+        this._replace.separator = this.cell_render_options_type.replace_global_separator
         return this
     }
     render(options: CellRenderOptionsType = {}): string {
         this.set_render_options(options)
-
         const template = []
         template.push(`<${this.tag} ${this.attributes.render()}>`)
 
         this._content.forEach(item => {
-            console.log(item.type)
             template.push(item.render(this.cell_render_options_type))
         })
         

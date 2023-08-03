@@ -4,13 +4,13 @@ export type HashType = string
 
 export type LibType = {
     local: string,
-    variable: string,
+    pack: string,
     href: string,
     hash?: string,
     priority?: boolean,
     crossorigin?: string,
     referrerpolicy?: string,
-    type?: string
+    type?: 'script' | 'style'
 }
 
 export type ForEachFilter = {
@@ -38,8 +38,8 @@ export type CellRenderOptionsType = {
     wrappers?: boolean
     replace?: boolean
     replace_global_separator?: {
-        start?: string,
-        end?: string
+        start: string,
+        end: string
     }
 }
 

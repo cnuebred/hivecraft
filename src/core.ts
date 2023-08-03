@@ -16,10 +16,10 @@ export class Core extends Cell {
     private header_constructor(init: boolean): void{
         this._header = new Cell('head')
         if(!init) return
-        this._header.add(':meta').attributes = {charset: 'UTF-8'}
+        this.header.add(':meta').attributes = {charset: 'UTF-8'}
         this.header.add(':meta').attributes = {'http-equiv': 'X-UA-Compatible', content: 'IE=edge'}
-        this._header.add(':meta').attributes = {name: "viewport", content: 'width=device-width, initial-scale=1.0'}
-        this._header.add(':title TITLE').replace = {TITLE: 'Document'}
+        this.header.add(':meta').attributes = {name: "viewport", content: 'width=device-width, initial-scale=1.0'}
+        this.header.add(':title TITLE').replace = {TITLE: 'Document'}
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -29,17 +29,22 @@ export class Core extends Cell {
     private async import_libs(lib:string) {
         const libs = IMPORT_LIBS_LIST.find(item => item.local == lib)
         if (!libs) return
-        const {local, variable, hash, href, crossorigin, referrerpolicy} = libs
+        const {local, pack, hash, href, crossorigin, referrerpolicy} = libs
+        libs.type = !libs.type ? (href.endsWith('.js') ? 'script' : 'style') : libs.type
+        let tag = libs.type == 'style' ? 'link' : 'script'
 
         const default_lib_set = {
-            ref_href_lib: local,
-            name_href_lib: variable,
-            src: href,
-            integrity: hash || '',
+            local: local,
+            package: pack,
+            [libs.type == 'style' ? 'href' : 'src']: href,
+            integrity: hash || null,
             crossorigin: crossorigin || 'anonymous',
             referrerpolicy: referrerpolicy || 'no-referrer',
         }
-        const href_lib = new Cell('script')
+        if(libs.type == 'style')
+            default_lib_set.rel = 'stylesheet'
+
+        const href_lib = new Cell(tag)
             href_lib.attributes.from(default_lib_set)
             this._header.push(href_lib, CellLocation.End)
     }
@@ -88,14 +93,16 @@ export class Core extends Cell {
 
         this.push(script)
         this.push(style)
-        const libs_to_import = ['HIVECRAFT_WORKER']
-        for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm))libs_to_import.push(match[4])
+        const libs_to_import = ['HIVECRAFT_WORKER'] // to import !important put in Render option
+        for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm)) libs_to_import.push(match[4])
+        
+        IMPORT_LIBS_LIST.forEach(item => {if(item.type == 'style') libs_to_import.push(item.local)})
         
         libs_to_import.filter((item, index, arr) => arr.indexOf(item) == index)
         .forEach(async item => await this.import_libs(item))
 
         if (config.no_script == undefined) config.no_script = true
-        this.html_string = this._header.render(config) + this.render(config)
+        this.html_string = this.header.render(config) + this.render(config)
         return new Build(this.html_string, this.replace.copy())
     }
 }
@@ -108,10 +115,12 @@ export class Build {
         this.replace = replace
     }
     get size() { return Buffer.byteLength(this.site) }
-    html(replace: { [index: string]: string }, config: CoreHtmlConfigRender = {}): string {
+    html(replace: { [index: string]: string | number }, config: CoreHtmlConfigRender = {}): string {
+        this.replace.separator = config.replace_global_separator
         let new_site = this.replace.filter(this.site)
-
+        
         const my_replace = new CellReplacements()
+        my_replace.separator = config.replace_global_separator
         my_replace.from(replace)
         new_site = my_replace.filter(new_site)
 

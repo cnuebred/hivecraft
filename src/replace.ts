@@ -1,20 +1,26 @@
 export class CellReplacements {
-    replacement: { [index: string]: string | number} = {}
-    separator: string = ''
-    filter(text: string): string {
+    replacement: { [index: string]: string | number } = {}
+    separator: {
+        start: string,
+        end: string
+    } = { start: '', end: '' }
+    filter(text: string, separator = this.separator): string {
         Object.entries(this.replacement).forEach(([key, value]) => {
-            text = text.replaceAll(key, value.toString())
+            text = text.replaceAll(`${separator?.start || ''}${key}${separator?.end || ''}`, value.toString())
         })
         return text
     }
-    from(attributes: { [index: string]: string | number} | CellReplacements = {}): CellReplacements {
+    from(attributes: { [index: string]: string | number } | CellReplacements = {}, priority = true): CellReplacements {
         if (attributes instanceof CellReplacements)
             attributes = attributes.replacement
 
-        this.replacement = { ...this.replacement, ...attributes }
+        if (priority)
+            this.replacement = { ...this.replacement, ...attributes }
+        else
+            this.replacement = { ...attributes, ...this.replacement }
         return this
     }
-    set(key: string, value: string):CellReplacements{
+    set(key: string, value: string): CellReplacements {
         this.replacement = { ...this.replacement, ...{ [key]: value } }
         return this
     }

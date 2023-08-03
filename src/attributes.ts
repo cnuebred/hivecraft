@@ -5,6 +5,7 @@ export class CellAttributes {
     render(): string {
         return Object.entries(this.attributes).map(([key, value]) => {
             if (key.startsWith('$')) return `${value}`
+            if(!key || !value) return ''
             return `${key}="${value}"`
         }).join(' ')
     }
