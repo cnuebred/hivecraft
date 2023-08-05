@@ -1,6 +1,7 @@
 /node_modules
 /.vscode
-/cdn/pub.worker.ts
+/cdn/**/*.js
+!/cdn/**/*min.js
 index.html
 app.*
 /dist
