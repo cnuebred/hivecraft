@@ -8,9 +8,13 @@
     "dist"
   ],
   "scripts": {
+    "prepublish": "npm run build",
+    "publish": "npm publish --access public",
+    "build:cdn": "tsc cdn/cdn.worker.ts --downlevelIteration && minify cdn/cdn.worker.js > cdn/cdn.min.js",
+    "prebuild": "npm run build:cdn",
     "build": "npx tsc",
-    "dev": "nodemon --ignore src/scripts/build --ignore src/scripts/process --exec npx ts-node app.ts",
-    "dev:pub:worker": "nodemon --watch ./cdn/*.ts --exec \"tsc cdn/*.ts --downlevelIteration && minify cdn/pub.worker.js > cdn/pub.worker.min.js \" "
+    "dev:cdn": "nodemon --watch cdn/cdn.worker.ts --exec \"npm run build:cdn \" ",
+    "dev": "nodemon --exec npx ts-node app.ts"
   },
   "keywords": [
     "craft",
