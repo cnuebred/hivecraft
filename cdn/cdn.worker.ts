@@ -1,5 +1,4 @@
 
-
 type EventCallback = (cog: any) => void
 
 class Tree {
@@ -9,7 +8,7 @@ class Tree {
         refs: {},
         params: {}
     }
-    ext ={
+    ext = {
         form: {},
         table: {},
         imports: {}
