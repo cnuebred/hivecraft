@@ -7,7 +7,7 @@ import path from "path";
 
 const change_to_css_style = (key) => {
     return key.replaceAll(/([a-z])([A-Z])/gm, '$1-$2').toLowerCase()
-  }
+}
 
 class CellStyleEntity {
     query: QueryType
@@ -16,7 +16,7 @@ class CellStyleEntity {
         this.query = query
         this.style = style
     }
-    render(){
+    render() {
         const list = Object.entries(this.style).map(([key, value]) => {
             return `${change_to_css_style(key)}: ${value}`
         })
@@ -30,15 +30,15 @@ type StyleObject = {
 }
 
 export class CellStyle extends CellTree {
-    imports: string[] = []
+    readonly imports: { source: string, url: boolean }[] = []
     styles: CellStyleEntity[] = []
     classes: string[] = []
     constructor() { super() }
-    empty(): boolean{
+    empty(): boolean {
         return this.styles.length == 0 && this.import.length == 0
     }
-    join(){
-        return this.styles.map(item => {return item.render()}).join(';')
+    join() {
+        return this.styles.map(item => { return item.render() }).join(';')
     }
     generate(): Cell {
         const script = new Cell('style')
@@ -48,27 +48,27 @@ export class CellStyle extends CellTree {
     }
     import(value: string): CellTree {
         const is_url = value.match(/http|https/gm)
-        if(!is_url)
+        if (!is_url)
             value = path.resolve(value)
         else
-            value = `url(${value})`
-        this.imports.push(value)
+            value = `url("${value}")`
+        this.imports.push({ source: value, url: !!is_url })
         return this
     }
-    add(styleObject: StyleObject){
+    add(styleObject: StyleObject) {
         const style_entity = new CellStyleEntity(`${this.query} ${styleObject.query || ''}`, styleObject.style)
         this.styles.push(style_entity)
     }
-    from(style: object){
-        if(style['import']){
+    from(style: object) {
+        if (style['import']) {
             style['import'].forEach(item => {
                 this.import(item)
             })
             delete style['import']
         }
-        this.add({style})
+        this.add({ style })
     }
-    class(...names: string[]){
+    class(...names: string[]) {
         names.forEach(name => {
             this.owner.attributes.append('class', name)
             this.classes.push(name)

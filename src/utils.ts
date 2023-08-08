@@ -55,7 +55,7 @@ export const IMPORT_LIBS_LIST: LibType[] = [
         type: 'script',
         local: 'HIVECRAFT_WORKER',
         pack: 'HIVECRAFT_WORKER',
-        href: 'https://cdn.jsdelivr.net/gh/cnuebred/hivecraft-public-worker@minify/pub/min/pub.worker.min.js',
+        href: './cdn/cdn.min.js',//'https://cdn.jsdelivr.net/gh/cnuebred/hivecraft-public-worker@minify/pub/min/pub.worker.min.js',
         hash: ''
     },
 ]

@@ -50,11 +50,8 @@ It is used for building a web page using the Hivecraft library.
 Example usage:
 ```ts
 const core = new Core();
-const header = core.push_lib({
-  local: 'https://example.com/style.css',
-  variable: 'style',
-  href: '/style.css'
-});
+core.style.import('https://unpkg.com/w3-css@4.1.0/w3.css');
+
 header.cell('h1').text('Welcome to Hivecraft Library');
 
 const mainContent = core.add('div');
@@ -71,11 +68,7 @@ import { Core, Cell, CellAttributes } from 'hivecraft';
 // Creating object instances
 const core = new Core();
 const mainContent = core.add('div');
-const header = core.push_lib({
-  local: 'https://example.com/style.css',
-  variable: 'style',
-  href: '/style.css'
-});
+core.style.import('https://unpkg.com/w3-css@4.1.0/w3.css');
 
 // Adding content
 header.cell('h1').text('Welcome to Hivecraft Library');
@@ -92,6 +85,13 @@ console.log(core.render());
 
 This program creates a web page using the Hivecraft library. It creates a header, a main content section, and adds a link to an example website. The generated HTML code is displayed in the console.
 
-### By using Hivecraft, you can streamline your web development workflow and dynamically generate HTML content with ease. Whether you're building simple web pages or complex web applications, Hivecraft has you covered.
+# TODO
+ - cell's text monad - creating wrappers
+ - cdn worker for loop by self items
+ - cdn worker elements dynamic creators
+ - attributes as pure book
 
-### Try it out and start building amazing web experiences with Hivecraft today!
+
+By using Hivecraft, you can streamline your web development workflow and dynamically generate HTML content with ease. Whether you're building simple web pages or complex web applications, Hivecraft has you covered.
+
+Try it out and start building amazing web experiences with Hivecraft today!
