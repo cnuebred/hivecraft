@@ -1,13 +1,17 @@
-type AttrType = { [index: string]: string | number | null | boolean }
+import { AttrRawType } from "./d"
+
 export class CellAttributes {
-    private attributes: AttrType = {}
-    constructor() {}
+    private attributes: AttrRawType = {}
+    constructor(attributes: AttrRawType = {}) {
+        this.attributes = attributes
+    }
     render(): string {
-        return Object.entries(this.attributes).map(([key, value]) => {
+        const attrs = Object.entries(this.attributes).map(([key, value]) => {
             if (key.startsWith('$')) return `${value}`
             if(!key || !value) return ''
             return `${key}="${value}"`
         }).join(' ')
+        return attrs ? ` ${attrs}` : ''
     }
     append(key: string, value: string | number | null, separator:string = ' '): CellAttributes {
         if(value == '') return this
@@ -27,6 +31,6 @@ export class CellAttributes {
         return this.attributes[key] || null
     }
     copy() {
-        return new CellAttributes().from(this.attributes)
+        return new CellAttributes(this.attributes)
     }
 }

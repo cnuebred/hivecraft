@@ -7,14 +7,14 @@ import { CellReplacements } from "./replace"
 
 export class Core extends Cell {
     html_string: string = ''
-    private _header: Cell
+    #header: Cell
     constructor() {
         super('core')
         this.header_constructor(false)
     }
-    get header(): Cell { return this._header }
+    get header(): Cell { return this.#header }
     private header_constructor(init: boolean): void {
-        this._header = new Cell('head')
+        this.#header = new Cell('head')
         if (!init) return
         this.header.add(':meta').attributes = { charset: 'UTF-8' }
         this.header.add(':meta').attributes = { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' }
@@ -46,7 +46,7 @@ export class Core extends Cell {
 
         const href_lib = new Cell(tag)
         href_lib.attributes.from(default_lib_set)
-        this._header.push(href_lib, CellLocation.End)
+        this.#header.push(href_lib, CellLocation.End)
     }
     private async generate_styles() {
         let text = ''
@@ -87,8 +87,8 @@ export class Core extends Cell {
         const scripts_trans = await transform(script_raw, 'ts')
         const style_trans = await transform(style_raw, 'css')
 
-        script.text(scripts_trans).category = 'script'
-        style.text(style_trans).category = 'style'
+        script.text(scripts_trans)
+        style.text(style_trans)
 
 
         script.set_render_options({ no_script: true })

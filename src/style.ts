@@ -42,8 +42,7 @@ export class CellStyle extends CellTree {
     }
     generate(): Cell {
         const script = new Cell('style')
-        const text = script.text(this.join())
-        text.category = 'style'
+        script.text(this.join())
         return script
     }
     import(value: string): CellTree {

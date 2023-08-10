@@ -2,6 +2,8 @@ export type WrapperType = 'h1'| 'h2'| 'h3'| 'h4' | 'h5'| 'b' | 's' | 'u' | 'i' |
 export type QueryType = string
 export type HashType = string
 
+export type AttrRawType = Record<string, string | number | null | boolean >
+
 export type LibType = {
     local: string,
     pack: string,

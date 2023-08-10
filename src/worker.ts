@@ -5,60 +5,60 @@ import { CellTree } from "./utils"
 
 type CallbackCog = {
     self: HTMLElement,
-    item: {[index:string]: any},
+    item: { [index: string]: any },
     data: {
-        proxy: {[index:string]: any},
-        refs: {[index:string]: any},
-        params: {[index:string]: any},
+        proxy: { [index: string]: any },
+        refs: { [index: string]: any },
+        params: { [index: string]: any },
     },
     ext: {
-        table: {[index:string]: any},
-        form: {[index:string]: any},
-        imports: {[index:string]: any},
+        table: { [index: string]: any },
+        form: { [index: string]: any },
+        imports: { [index: string]: any },
     }
 }
 type Callback = (cog: CallbackCog) => void
 
-abstract class WorkerCellPoint{
+abstract class WorkerCellPoint {
     query: QueryType
-    abstract render():string
+    abstract render(): string
 }
 
 export class CellEvent extends WorkerCellPoint {
     type: string
-    private _callback: Callback
+    #callback: Callback
     constructor(type: string, query: QueryType) {
         super()
         this.type = type
         this.query = query
     }
-    set callback(value: Callback) { this._callback = value }
-    get callback() { return this._callback }
+    set callback(value: Callback) { this.#callback = value }
+    get callback() { return this.#callback }
     render(): string {
         const script = `(() => {HIVECRAFT_WORKER.$on_event('${this.query}', '${this.type}', ${this.callback})})();`
         return script
     }
 }
-export class CellPure extends WorkerCellPoint{
+export class CellPure extends WorkerCellPoint {
     name: string
-    private _callback: Callback
+    #callback: Callback
     constructor(name: string, query: QueryType) {
         super()
         this.name = name
         this.query = query
     }
-    set callback(value: Callback) { this._callback = value }
-    get callback() { return this._callback }
+    set callback(value: Callback) { this.#callback = value }
+    get callback() { return this.#callback }
     render() {
         const script = `(() => {HIVECRAFT_WORKER.pure['${this.name.replaceAll(/ /gm, '_')}'] = ${this.callback}})();`
         return script
     }
 }
 
-export class CellProxy  extends WorkerCellPoint{
+export class CellProxy extends WorkerCellPoint {
     name: string
     value: string | number
-    constructor(name:string, value: string | number, query: QueryType) {
+    constructor(name: string, value: string | number, query: QueryType) {
         super()
         this.name = name
         this.value = value
@@ -78,39 +78,31 @@ export class CellWorker extends CellTree {
     empty(): boolean {
         return this.worker_cells.length == 0
     }
-    join():string{
-        return this.worker_cells.map(item => { return item.render() }).join('')
-    }
+    join() { return this.worker_cells.map(item => { return item.render() }).join('') }
     generate(): Cell {
         const script = new Cell('script')
-        const text = script.text(this.join())
-        text.category = 'script'
+        script.text(this.join())
         return script
     }
-    // base_types
-    click = this.add('click').event
-    blur = this.add('blur').event
-    // !base_types
-    add(name: string) {
-        return {
-            event: (callback: Callback): CellWorker => {
-                const event = new CellEvent(name, this.query)
-                event.callback = callback
-                this.worker_cells.push(event)
-                return this
-            },
-            proxy: (value?: string | number | null): CellWorker => {
-                const proxy = new CellProxy(name, value, this.query)
-                this.worker_cells.push(proxy)
-                return this
-            },
-            pure: (callback: Callback): CellWorker =>{
-                const event = new CellPure(name, this.query)
-                event.callback = callback
-                this.worker_cells.push(event)
-                return this
-            }
-        }
+    
+    event(event: string, callback: Callback) {
+        const call_event = new CellEvent(event, this.query)
+        call_event.callback = callback
+        this.worker_cells.push(call_event)
+        return this
+    }
+
+    pure(name: string, callback: Callback) {
+        const call_event = new CellEvent(name, this.query)
+        call_event.callback = callback
+        this.worker_cells.push(call_event)
+        return this
+    }
+
+    proxy(name: string, value?: string | number | null): CellWorker {
+        const proxy = new CellProxy(name, value, this.query)
+        this.worker_cells.push(proxy)
+        return this
     }
     copy(): CellWorker {
         const worker_copy = new CellWorker()

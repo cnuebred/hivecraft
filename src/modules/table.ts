@@ -34,7 +34,7 @@ export class Table extends Cell {
         this.size[1] = column.length > this.size[1] ? column.length : this.size[1]
         this.size[0]++
 
-        if(!this._table._content.find((item:Cell) => item?.tag == 'tr'))
+        if(!this._table.#content.find((item:Cell) => item?.tag == 'tr'))
         this._table.cell('tr')
         
         this._table.forEach((item:Cell) => {
@@ -78,7 +78,7 @@ export class Table extends Cell {
 
         if(this._symmetric)
         this._table.forEach((item:Cell) => {    
-            if(item._content.length < this.size[0])
+            if(item.#content.length < this.size[0])
                 item.cell(tag).text('')
         }, {only: 'block', tag: ['tr'], self:false})
 
@@ -87,7 +87,7 @@ export class Table extends Cell {
     put(row:number, column:number, value: TableContent){
         this._table.forEach((item:Cell, index:number) => {   
             if(index == row)
-                (item._content[column] as Cell).text(value.toString(), true)
+                (item.#content[column] as Cell).text(value.toString(), true)
         }, {only: 'block', tag: ['tr'], self:false})
     }
     from(from_table?: TableTypeComplex) {

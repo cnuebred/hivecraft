@@ -2,19 +2,20 @@ import { Cell } from "./cell"
 import { CellRenderOptionsType, LibType, QueryType } from "./d"
 
 export class CellTree{
-    private _query: QueryType
-    private _owner: Cell
+    #query: QueryType
+    #owner: Cell
     constructor(){}
-    set query(value: QueryType) { this._query = value }
-    get query() { return this._query }
+    set query(value: QueryType) { this.#query = value }
+    get query() { return this.#query }
 
-    set owner(value: Cell) { this._owner = value }
-    get owner() { return this._owner }
+    set owner(value: Cell) { this.#owner = value }
+    get owner() { return this.#owner }
 }
 
 export const WORKER_NAME = 'HIVECRAFT_WORKER'
 
-export const SINGLE_MARKS = ['br', 'input']
+//https://html.spec.whatwg.org/multipage/syntax.html#void-element
+export const SINGLE_MARKS = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']
 
 export const meta_regex = {
   tag: /(?<=\:)(?<tag>\w*)/gm,
@@ -23,7 +24,7 @@ export const meta_regex = {
   ref: /((?<=\$)(?<ref>\w*))/gm,
 }
 
-export const CellRenderOptionsDefault: CellRenderOptionsType = {
+export const CELL_RENDER_OPTIONS_DEFAULT: CellRenderOptionsType = {
     wrappers: true,
     no_script: false,
     proxy: {
