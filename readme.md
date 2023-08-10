@@ -86,10 +86,12 @@ console.log(core.render());
 This program creates a web page using the Hivecraft library. It creates a header, a main content section, and adds a link to an example website. The generated HTML code is displayed in the console.
 
 # TODO
- - cell's text monad - creating wrappers
- - cdn worker for loop by self items
- - cdn worker elements dynamic creators
- - attributes as pure book
+- [x] attributes as pure book
+- [ ] creating cells chain system - new feature - new patch update
+- [ ] cell's text monad - creating wrappers
+- [ ] cell's worker monad - creating scripts
+- [ ] cdn worker for loop by self items
+- [ ] cdn worker elements dynamic creators
 
 
 By using Hivecraft, you can streamline your web development workflow and dynamically generate HTML content with ease. Whether you're building simple web pages or complex web applications, Hivecraft has you covered.
