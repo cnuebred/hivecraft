@@ -1,67 +1,22 @@
+import { CellAttributes } from "./attributes"
 import { Cell } from "./cell"
-import { CellRenderOptionsType, WrapperType } from "./d"
+import { AttrRawType, CellRenderOptionsType, WrapperType } from "./d"
 import { CellReplacements } from "./replace"
 
-export class CellText {
-    type: string = 'text'
-    text: string
-    #replace: CellReplacements
-    #parent: Cell
-    #wrapper: WrapperType[] = []
-
-    set parent(value: Cell){
-        this.#parent = value
-        this.replace.from(value.replace)
-    }
-    get parent(){
-        return this.#parent
-    }
-    set replace(value: {[index:string]: string | number} | CellReplacements){
-        if(value instanceof CellReplacements){
-            this.#replace = value
-        }else{
-            this.#replace = new CellReplacements()
-            this.#replace.from(value)
-        }
-    }
-    get replace(): CellReplacements{ return this.#replace.from(this.parent?.replace)}
-
-    constructor(text: string = '', replace?: CellReplacements) {
-        this.text = text
-        this.replace = replace || new CellReplacements()
-    }
-    
-    render(options?: CellRenderOptionsType): string {
-        if (options?.replace)
-            this.text = this.replace.filter(this.text)
-
-        if (options?.proxy?.start && !['style', 'script'].includes(this.parent.tag))
-            this.proxy_applier(options)
-
-        if (options?.wrappers && this.#wrapper.length != 0)
-            this.attach_wrappers()
-
-        return this.text
-    }
-    wrap(...wraps: WrapperType[]): CellText {
-        this.#wrapper = [...this.#wrapper, ...wraps]
-        return this
-    }
-    copy(): CellText {
-        const cell_text_copy = new CellText(this.text)
-        cell_text_copy.#wrapper = this.#wrapper
-        cell_text_copy.replace = this.replace
-        return cell_text_copy
-    }
-    private proxy_applier(options?: CellRenderOptionsType) {
-        if (!options.proxy?.end)
-            options.proxy.end = options.proxy.start
-        const proxy_span = (match, _1) => `<span proxy_data="${_1}"></span>`
-        this.text = this.text.replaceAll(/\|\|([\w.]+)\|\|/gm, proxy_span)
-    }
-    private attach_wrappers() {
-        this.#wrapper.map(item => {
-            this.text = `<${item}>${this.text}</${item}>`
-        })
-    }
-}
+export const txt = (_text: string) => ({
+    map: (callback: (_text: string) => string) => txt(callback(_text)),
+    replace: (replace: string, new_text: string) => txt(_text.replaceAll(replace, new_text)),
+    wrap: (tag: string, attributes: AttrRawType = {}) => txt(`<${tag}${CellAttributes.parser(attributes)}>${_text}</${tag}>`),
+    /**
+     * @todo
+     * regexp change to custom separators
+     */
+    proxy: () => {
+        return txt(
+            _text.replaceAll(new RegExp(`\\[\([\\w.]+\)\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
+        )
+    },
+    render: () => _text,
+    copy: () => txt(_text)
+})
+export type TxtType = ReturnType<typeof txt>

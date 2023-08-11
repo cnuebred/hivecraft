@@ -6,7 +6,7 @@ import { Form } from "./modules/form";
 import { Table } from "./modules/table";
 import { CellReplacements } from "./replace";
 import { CellStyle } from "./style";
-import { CellText } from "./text";
+import { txt, TxtType } from "./text";
 import { CELL_RENDER_OPTIONS_DEFAULT } from "./utils";
 import { CellWorker } from "./worker";
 
@@ -19,8 +19,9 @@ export {
     CellLocation,
     CellAttributes,
     CellStyle,
-    CellText,
-    CELL_RENDER_OPTIONS_DEFAULT as CellRenderOptionsDefault,
+    txt,
+    TxtType,
+    CELL_RENDER_OPTIONS_DEFAULT,
     CellWorker,
     Form as HivecraftForm,
     Table as HivecraftTable

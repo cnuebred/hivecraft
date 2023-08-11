@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto"
 import { AttrRawType, CellLocation, CellRenderOptionsType, CellStyleObject, ForEachFilter, HashType, } from "./d"
 import { CellStyle } from "./style"
-import { CellText } from "./text"
+import { TxtType, txt } from "./text"
 import { CellWorker } from "./worker"
 import { CellAttributes } from "./attributes"
 import { CellReplacements } from "./replace"
@@ -16,7 +16,7 @@ export class Cell {
         this.#type = value
     }
     #hash: HashType = randomBytes(4).toString('hex')
-    #content: (CellText | Cell)[] = []
+    readonly content: (ReturnType<typeof txt> | Cell)[] = []
     #tag: string = 'div'
     #parent: Cell
     #style: CellStyle
@@ -103,7 +103,7 @@ export class Cell {
         const template = []
         template.push(`<${this.tag}${this.attributes.render()}>`)
 
-        this.#content.forEach(item => {
+        this.content.forEach(item => {
             template.push(item.render(this.#cell_render_options_type))
         })
 
@@ -118,18 +118,9 @@ export class Cell {
         this.attributes.set('ref', name)
         return this
     }
-    /**
-     * 
-     * `TODO`:
-     * - text - change to text or text Monad
-     * 
-     * @param text 
-     * @returns `Cell`
-     * 
-     */
-    text(text: string): Cell {
-        const text_node = new CellText(text)
-        this.push(text_node)
+    text(text: string | TxtType, location: CellLocation = CellLocation.End): Cell {
+        const text_node = typeof text == 'string' ? txt(text) : text
+        this.push(text_node, location)
         return this
     }
     cell(tag: string, location?: CellLocation): Cell {
@@ -137,19 +128,30 @@ export class Cell {
         this.push(cell, location)
         return cell
     }
-    push(cell_component: Cell | CellText, location: CellLocation = CellLocation.End): Cell {
+    clear_content(only_text:boolean = true): Cell{
+        this.content.filter(item => only_text ? !(item instanceof txt) : false )
+        return this
+    }
+    push(cell_component: Cell | TxtType, location: CellLocation = CellLocation.End): Cell {
+        if(cell_component instanceof Cell)
+        {
+            if(location == CellLocation.Start || location == CellLocation.End)
+                cell_component.parent = this
+            if(location == CellLocation.After || location == CellLocation.Before)
+                cell_component.parent = this.parent
+        }
+
         if (location == CellLocation.Start) {
-            cell_component.parent = this
-            this.#content.splice(0, 0, cell_component)
+            this.content.splice(0, 0, cell_component)
         }
         else if (location == CellLocation.End) {
-            cell_component.parent = this
-            this.#content.push(cell_component)
+            this.content.push(cell_component)
         }
         else if (location == CellLocation.After && this.parent)
-            this.parent.#content.splice(this.parent.#content.indexOf(this) + 1, 0, cell_component)
+            this.parent.content.splice(this.parent.content.indexOf(this) + 1, 0, cell_component)
         else if (location == CellLocation.Before && this.parent)
-            this.parent.#content.splice(this.parent.#content.indexOf(this), 0, cell_component)
+            this.parent.content.splice(this.parent.content.indexOf(this), 0, cell_component)
+
         return this
     }
     /**
@@ -174,12 +176,12 @@ export class Cell {
         this.push(cell, location)
         return cell
     }
-    forEach(callback: (item: Cell | CellText, index: number) => void, filter: ForEachFilter = {}, index: number = 0) {
+    forEach(callback: (item: Cell | TxtType, index: number) => void, filter: ForEachFilter = {}, index: number = 0) {
         if (filter.self)
             callback(this, index)
         filter.self = true
-        this.#content.forEach(element => {
-            if (element instanceof CellText && (!filter?.only || filter?.only == 'text'))
+        this.content.forEach(element => {
+            if (element instanceof txt && (!filter?.only || filter?.only == 'text'))
                 callback(element, index)
 
             if (element instanceof Cell && (!filter?.only || filter?.only == 'block'))
@@ -188,13 +190,16 @@ export class Cell {
             index++
         })
     }
+    find(callback: (item: Cell |TxtType, index:number) => boolean){
+        return this.content.find(callback)
+    }
     copy(): Cell {
         const cell_copy = new Cell(this.tag)
         cell_copy.replace = this.replace.copy()
         cell_copy.attributes = this.attributes.copy()
         cell_copy.style = this.style.copy()
         cell_copy.worker = this.worker.copy()
-        this.#content.forEach((item) => {
+        this.content.forEach((item) => {
             cell_copy.push(item.copy())
         })
         return cell_copy
