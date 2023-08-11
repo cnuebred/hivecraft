@@ -5,13 +5,16 @@ export class CellAttributes {
     constructor(attributes: AttrRawType = {}) {
         this.attributes = attributes
     }
-    render(): string {
-        const attrs = Object.entries(this.attributes).map(([key, value]) => {
+    static parser(attributes: AttrRawType){
+        const attrs = Object.entries(attributes).map(([key, value]) => {
             if (key.startsWith('$')) return `${value}`
             if(!key || !value) return ''
             return `${key}="${value}"`
         }).join(' ')
         return attrs ? ` ${attrs}` : ''
+    }
+    render(): string {
+        return CellAttributes.parser(this.attributes)
     }
     append(key: string, value: string | number | null, separator:string = ' '): CellAttributes {
         if(value == '') return this
