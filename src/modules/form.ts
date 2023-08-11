@@ -57,7 +57,7 @@ export class Form extends Cell {
     }
     private oninput(input:Cell, foo_name, foo: () => void){
         input.attributes.set('@input', foo_name)
-        input.worker.add('input').event(foo)
+        input.worker.event('input', foo)
         return this.config_box(input)
     }
     input(type: string) {
