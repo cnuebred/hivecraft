@@ -8,8 +8,9 @@ npm install @cnuebred/hivecraft
 ```
 To install Hivecraft, simply run the following command:
 
-Here are examples of the usage of individual functions in the Hivecraft:
+⚠[TODO](#todo) & [TODO BBT](#todo-bbt-big-brain-time)⚠ - package in progress
 
+Here are examples of the usage of individual functions in the Hivecraft:
 ### CellAttributes class:
 
 You can use the `append(key, value)` or `set(key, value)` method to add attributes to a cell.
@@ -92,6 +93,9 @@ This program creates a web page using the Hivecraft library. It creates a header
 - [ ] cell's worker monad - creating scripts
 - [ ] cdn worker for loop by self items
 - [ ] cdn worker elements dynamic creators
+--- 
+# TODO BBT (Big Brain Time)
+ - change all modules to simply functions returned just ready components, and update system to generating cells for other users, just by gitst :thinking:
 
 
 By using Hivecraft, you can streamline your web development workflow and dynamically generate HTML content with ease. Whether you're building simple web pages or complex web applications, Hivecraft has you covered.
