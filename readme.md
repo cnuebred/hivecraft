@@ -89,7 +89,7 @@ This program creates a web page using the Hivecraft library. It creates a header
 # TODO
 - [x] attributes as pure book
 - [ ] creating cells chain system - new feature - new patch update
-- [ ] cell's text monad - creating wrappers
+- [x] cell's text monad - creating wrappers
 - [ ] cell's worker monad - creating scripts
 - [ ] cdn worker for loop by self items
 - [ ] cdn worker elements dynamic creators
