@@ -1,11 +1,11 @@
 import { randomBytes } from "crypto"
-import { AttrRawType, CellLocation, CellRenderOptionsType, CellStyleObject, ForEachFilter, HashType, } from "./d"
-import { CellStyle } from "./style"
-import { TxtType, txt } from "./text"
-import { CellWorker } from "./worker"
 import { CellAttributes } from "./attributes"
+import { AttrRawType, CellLocation, CellRenderOptionsType, CellStyleObject, ForEachFilter, HashType, } from "./d"
 import { CellReplacements } from "./replace"
+import { CellStyle, StyleObject } from "./style"
+import { TxtType, txt } from "./text"
 import { CELL_RENDER_OPTIONS_DEFAULT, SINGLE_MARKS, meta_regex } from "./utils"
+import { CellWorker } from "./worker"
 
 export class Cell {
     #type: string = 'block'
@@ -51,16 +51,14 @@ export class Cell {
     }
     get worker(): CellWorker { return this.#worker }
 
-    set style(value: CellStyleObject | CellStyle) {
+    set style(value: StyleObject | CellStyle) {
         if (value instanceof CellStyle) {
             value.query = this.query
             value.owner = this
             this.#style = value
         } else {
-            this.#style = new CellStyle()
-            this.#style.query = this.query
+            this.#style = new CellStyle(this.query, value)
             this.#style.owner = this
-            this.#style.from(value)
         }
     }
     get style(): CellStyle { return this.#style }
@@ -100,15 +98,16 @@ export class Cell {
     }
     render(options: CellRenderOptionsType = {}): string {
         this.set_render_options(options)
-        const template = []
+        const template: string[] = []
         template.push(`<${this.tag}${this.attributes.render()}>`)
 
         this.content.forEach(item => {
-            template.push(item.render(this.#cell_render_options_type))
+            template.push(item.render(this.#cell_render_options_type) as string)
         })
-
-        if (!this.#cell_render_options_type.close && !SINGLE_MARKS.includes(this.tag))
+// !this.#cell_render_options_type.close && 
+        if (!SINGLE_MARKS.includes(this.tag))
             template.push(`</${this.tag}>`)
+        
         if (!this.#cell_render_options_type.no_script && !this.worker.empty())
             template.push(this.worker.generate().render({ no_script: true }))
 
@@ -128,16 +127,15 @@ export class Cell {
         this.push(cell, location)
         return cell
     }
-    clear_content(only_text:boolean = true): Cell{
-        this.content.filter(item => only_text ? !(item instanceof txt) : false )
+    clear_content(only_text: boolean = true): Cell {
+        this.content.filter(item => only_text ? !(item instanceof txt) : false)
         return this
     }
     push(cell_component: Cell | TxtType, location: CellLocation = CellLocation.End): Cell {
-        if(cell_component instanceof Cell)
-        {
-            if(location == CellLocation.Start || location == CellLocation.End)
+        if (cell_component instanceof Cell) {
+            if (location == CellLocation.Start || location == CellLocation.End)
                 cell_component.parent = this
-            if(location == CellLocation.After || location == CellLocation.Before)
+            if (location == CellLocation.After || location == CellLocation.Before)
                 cell_component.parent = this.parent
         }
 
@@ -190,7 +188,7 @@ export class Cell {
             index++
         })
     }
-    find(callback: (item: Cell |TxtType, index:number) => boolean){
+    find(callback: (item: Cell | TxtType, index: number) => boolean) {
         return this.content.find(callback)
     }
     copy(): Cell {

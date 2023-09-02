@@ -50,18 +50,18 @@ export class Core extends Cell {
     }
     private async generate_styles() {
         let text = ''
-        const imports: typeof this.style.imports = []
+        const imports: typeof this.style.imports_list = []
         await this.forEach((item: Cell) => {
             if (item.style.empty()) return
-            text += item.style.join()
-            imports.push(...item.style.imports)
+            text += item.style.render()
+            imports.push(...item.style.imports_list)
         }, { only: 'block', self: true })
 
         for (let item of imports) {
             if (item.url)
-                text += `@import ${item.source};\n`
+                text += `@import ${item.render};\n`
             else
-                await readFile(item.source).then(data => {
+                await readFile(item.render).then(data => {
                     text = data.toString() + text
                 })
         }
