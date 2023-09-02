@@ -36,7 +36,9 @@ describe('Style module tests - basic', () => {
             color: 'black'
         }
         style.push_children(third_child)
-        expect(style.css.children[2]).toStrictEqual(third_child)
+        console.log([...(style_css.children as  StyleObject[]), third_child]
+        )
+        expect(style.css.children).toStrictEqual([...(style_css.children as  StyleObject[]), third_child])
     })
 })
 
