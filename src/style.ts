@@ -1,13 +1,11 @@
-import { CssObject, QueryType } from "./d";
-import { CellTree } from "./utils";
+import { StyleObject } from "./d";
+import { CellTree, STYLE_OBJ_FUNCTOR } from "./utils";
 import path from "path";
 
 
 const change_to_css_style = (key) => {
     return key.replaceAll(/([a-z])([A-Z])/gm, '$1-$2').toLowerCase()
 }
-export type StyleObject = CssObject & { imports?: string[], query?: QueryType, children?: StyleObject[] }
-const STYLE_OBJ_FUNCTORS = ['imports', 'query', 'children']
 
 
 export class CellStyle extends CellTree {
@@ -17,7 +15,7 @@ export class CellStyle extends CellTree {
         super()
         if (query) this.query = query
         if (css) this.from({ ...css })
-    }   
+    }
     empty(): boolean {
         for (let key in this.css) {
             if (this.css.hasOwnProperty(key)) {
@@ -39,7 +37,7 @@ export class CellStyle extends CellTree {
             const local_query = css.query ? `${query}${css.query.startsWith(':') ? '' : ' '}${css.query}` : query
             const style_properties = Object.entries(css)
                 .map(([key, value]) => {
-                    if (STYLE_OBJ_FUNCTORS.includes(key)) return null
+                    if (STYLE_OBJ_FUNCTOR.includes(key)) return null
                     return `${change_to_css_style(key)}:${value};`
                 })
                 .filter(item => !!item).join('')
