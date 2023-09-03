@@ -1,8 +1,8 @@
-export type WrapperType = 'h1'| 'h2'| 'h3'| 'h4' | 'h5'| 'b' | 's' | 'u' | 'i' | 'sup' | 'sub' | 'code' | 'span'
+export type WrapperType = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'b' | 's' | 'u' | 'i' | 'sup' | 'sub' | 'code' | 'span'
 export type QueryType = string
 export type HashType = string
 
-export type AttrRawType = Record<string, string | number | null | boolean >
+export type AttrRawType = Record<string, string | number | null | boolean>
 
 export type LibType = {
     local: string,
@@ -20,6 +20,21 @@ export type ForEachFilter = {
     only?: 'block' | 'text'
     tag?: string[]
 }
+export type CallbackCog = {
+    self: HTMLElement,
+    item: { [index: string]: any },
+    data: {
+        proxy: { [index: string]: any },
+        refs: { [index: string]: any },
+        params: { [index: string]: any },
+    },
+    ext: {
+        table: { [index: string]: any },
+        form: { [index: string]: any },
+        imports: { [index: string]: any },
+    }
+}
+export type Callback = (cog: CallbackCog) => void
 
 export type CSSList = CSSStyleDeclaration
 
@@ -29,6 +44,7 @@ export interface Event {
     type: string,
     callback: (...arg: any[]) => void
 }
+export type StyleObject = CssObject & { imports?: string[], query?: QueryType, children?: StyleObject[] }
 
 export type CellRenderOptionsType = {
     close?: boolean
@@ -58,8 +74,4 @@ export enum CellLocation {
     After
 }
 
-export type CssObject = {[index in keyof CSSList]?: string}
-
-export type CellStyleObject = {
-    import?: string[]    
-} & CssObject
+export type CssObject = { [index in keyof CSSList]?: string | number }

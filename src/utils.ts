@@ -1,10 +1,10 @@
 import { Cell } from "./cell"
 import { CellRenderOptionsType, LibType, QueryType } from "./d"
 
-export class CellTree{
+export class CellTree {
     #query: QueryType
     #owner: Cell
-    constructor(){}
+    constructor() { }
     set query(value: QueryType) { this.#query = value }
     get query() { return this.#query }
 
@@ -16,13 +16,15 @@ export const WORKER_NAME = 'HIVECRAFT_WORKER'
 
 //https://html.spec.whatwg.org/multipage/syntax.html#void-element
 export const SINGLE_MARKS = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']
+export const STYLE_OBJ_FUNCTOR = ['imports', 'query', 'children']
 
 export const meta_regex = {
-  tag: /(?<=\:)(?<tag>\w*)/gm,
-  id: /((?<=\#)(?<id>\w*))/gm,
-  class: /((?<=\.)(?<class>\w*))/gm,
-  ref: /((?<=\$)(?<ref>\w*))/gm,
+    tag: /(?<=\:)(?<tag>\w*)/gm,
+    id: /((?<=\#)(?<id>\w*))/gm,
+    class: /((?<=\.)(?<class>\w*))/gm,
+    ref: /((?<=\$)(?<ref>\w*))/gm,
 }
+export const BASE_QUERY_STYLE_SELECTOR_REPLACE = '@'
 
 export const CELL_RENDER_OPTIONS_DEFAULT: CellRenderOptionsType = {
     wrappers: true,
