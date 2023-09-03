@@ -51,7 +51,7 @@ export class Core extends Cell {
     private async generate_styles() {
         let text = ''
         const imports: typeof this.style.imports_list = []
-        await this.forEach((item: Cell) => {
+        await this.for_each((item: Cell) => {
             if (item.style.empty()) return
             text += item.style.render()
             imports.push(...item.style.imports_list)
@@ -70,7 +70,7 @@ export class Core extends Cell {
     private async generate_scripts() {
         let text = ''
         text += `let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new CoreWorker().init();`
-        this.forEach(async (item: Cell) => {
+        this.for_each(async (item: Cell) => {
             if (item.worker.empty()) return
             text += item.worker.join()
         }, { only: 'block', self: true })
@@ -131,6 +131,4 @@ export class Build {
             writeFile(config.to_file, new_site)
         return new_site
     }
-    pdf(name: string, config?: CorePdfConfigRender) { } //TODO
-
 }

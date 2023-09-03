@@ -1,5 +1,6 @@
 import path from 'path';
-import { CellStyle, StyleObject } from '../src/style';
+import { CellStyle } from '../src/style';
+import { StyleObject } from '../src/d';
 
 describe('Style module tests - basic', () => {
     let style: CellStyle
@@ -36,15 +37,15 @@ describe('Style module tests - basic', () => {
             color: 'black'
         }
         style.push_children(third_child)
-        console.log([...(style_css.children as  StyleObject[]), third_child]
+        console.log([...(style_css.children as StyleObject[]), third_child]
         )
-        expect(style.css.children).toStrictEqual([...(style_css.children as  StyleObject[]), third_child])
+        expect(style.css.children).toStrictEqual([...(style_css.children as StyleObject[]), third_child])
     })
 })
 
 describe('Style module tests - imports', () => {
     let style: CellStyle
-    const style_css:StyleObject = {
+    const style_css: StyleObject = {
         imports: ['https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css'],
         color: 'red',
         top: '30%'

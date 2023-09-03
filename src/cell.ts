@@ -1,11 +1,10 @@
 import { randomBytes } from "crypto"
 import { CellAttributes } from "./attributes"
-import { AttrRawType, CellLocation, CellRenderOptionsType, CellStyleObject, ForEachFilter, HashType, } from "./d"
+import { AttrRawType, CellLocation, CellRenderOptionsType, ForEachFilter, HashType, StyleObject, WrapperType, } from "./d"
 import { CellReplacements } from "./replace"
-import { CellStyle, StyleObject } from "./style"
-import { TxtType, txt } from "./text"
 import { CELL_RENDER_OPTIONS_DEFAULT, SINGLE_MARKS, meta_regex } from "./utils"
 import { CellWorker } from "./worker"
+import { CellStyle } from "./style"
 
 export class Cell {
     #type: string = 'block'
@@ -16,7 +15,8 @@ export class Cell {
         this.#type = value
     }
     #hash: HashType = randomBytes(4).toString('hex')
-    readonly content: (ReturnType<typeof txt> | Cell)[] = []
+    content: Cell[] = [] // private
+    value: string[] = []
     #tag: string = 'div'
     #parent: Cell
     #style: CellStyle
@@ -96,18 +96,29 @@ export class Cell {
         this.#replace.separator = this.#cell_render_options_type.replace_global_separator
         return this
     }
+    #text_render(text: string[]): string {
+        let pure_text = text.join(' ')
+        pure_text = this.replace.filter(pure_text)
+        pure_text = pure_text
+            .replaceAll(new RegExp(`\\[\([\\w.]+\)\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
+
+        return pure_text
+    }
     render(options: CellRenderOptionsType = {}): string {
         this.set_render_options(options)
+        if (this.type == 'text')
+            return this.#text_render(this.value)
+
         const template: string[] = []
         template.push(`<${this.tag}${this.attributes.render()}>`)
 
         this.content.forEach(item => {
             template.push(item.render(this.#cell_render_options_type) as string)
         })
-// !this.#cell_render_options_type.close && 
+        // !this.#cell_render_options_type.close && 
         if (!SINGLE_MARKS.includes(this.tag))
             template.push(`</${this.tag}>`)
-        
+
         if (!this.#cell_render_options_type.no_script && !this.worker.empty())
             template.push(this.worker.generate().render({ no_script: true }))
 
@@ -117,9 +128,32 @@ export class Cell {
         this.attributes.set('ref', name)
         return this
     }
-    text(text: string | TxtType, location: CellLocation = CellLocation.End): Cell {
-        const text_node = typeof text == 'string' ? txt(text) : text
-        this.push(text_node, location)
+    // text(text: string | TxtType, location: CellLocation = CellLocation.End): Cell {
+    //     const text_node = typeof text == 'string' ? txt(text) : text
+    //     this.push(text_node, location)
+    //     return this
+    // }
+    text(text: string | Cell, wrappers: { tag: WrapperType, attr: AttrRawType }[] = [], location: CellLocation = CellLocation.End): Cell {
+        if (this.type == 'text') return this //TODO
+        if (text instanceof Cell && text.type == 'text') {
+            if (wrappers.length != 0) {
+                let last_child: Cell = text
+                wrappers.forEach(item => {
+                    const wrapper = new Cell(item.tag)
+                    wrapper.attributes.from(item.attr)
+                    last_child.parent = wrapper
+                })
+            }
+            else
+                this.push(text, location)
+        }
+        else {
+            const cell_text = new Cell('-')
+            cell_text.type = 'text'
+            cell_text.value = [text as string]
+            cell_text.text(cell_text, wrappers)
+            this.push(cell_text, location)
+        }
         return this
     }
     cell(tag: string, location?: CellLocation): Cell {
@@ -127,17 +161,16 @@ export class Cell {
         this.push(cell, location)
         return cell
     }
-    clear_content(only_text: boolean = true): Cell {
-        this.content.filter(item => only_text ? !(item instanceof txt) : false)
+    clear(only_text: boolean = false): Cell {
+        this.content = this.content.filter(item => only_text ? !(item.type == 'text') : false)
         return this
     }
-    push(cell_component: Cell | TxtType, location: CellLocation = CellLocation.End): Cell {
-        if (cell_component instanceof Cell) {
-            if (location == CellLocation.Start || location == CellLocation.End)
-                cell_component.parent = this
-            if (location == CellLocation.After || location == CellLocation.Before)
-                cell_component.parent = this.parent
-        }
+    push(cell_component: Cell, location: CellLocation = CellLocation.End): Cell {
+        if (location == CellLocation.Start || location == CellLocation.End)
+            cell_component.parent = this
+        if (location == CellLocation.After || location == CellLocation.Before)
+            cell_component.parent = this.parent
+
 
         if (location == CellLocation.Start) {
             this.content.splice(0, 0, cell_component)
@@ -170,29 +203,45 @@ export class Cell {
      */
     add(struct: string, location?: CellLocation): Cell {
         const cell = new Cell('div')
-        cell.meta_extractor(struct)
+        cell.#meta_extractor(struct)
         this.push(cell, location)
         return cell
     }
-    forEach(callback: (item: Cell | TxtType, index: number) => void, filter: ForEachFilter = {}, index: number = 0) {
+    for_each(callback: (item: Cell, index: number) => void, filter: ForEachFilter = {}, index: number = 0) {
         if (filter.self)
             callback(this, index)
         filter.self = true
         this.content.forEach(element => {
-            if (element instanceof txt && (!filter?.only || filter?.only == 'text'))
+            if (!filter?.only || filter?.only == 'text')
                 callback(element, index)
 
-            if (element instanceof Cell && (!filter?.only || filter?.only == 'block'))
+            if (!filter?.only || filter?.only == 'block')
                 if (!filter.tag || filter.tag.includes(element.tag))
-                    element.forEach(callback, filter, index)
+                    element.for_each(callback, filter, index)
             index++
         })
     }
-    find(callback: (item: Cell | TxtType, index: number) => boolean) {
-        return this.content.find(callback)
+    find(callback: (item: Cell, index: number) => boolean) {
+        const first_iteration = this.content.find(callback)
+        if (first_iteration) return first_iteration
+        for (let item of this.content) {
+            return item.find(callback)
+        }
+    }
+
+    #meta_extractor(hivecraft_struct: string) {
+        const [meta, ...content] = hivecraft_struct.split(' ')
+        this.tag = meta.match(meta_regex.tag)?.[0]
+        this.attributes.set('id', meta.match(meta_regex.id)?.[0] || '')
+        this.attributes.append('class', meta.match(meta_regex.class)?.join(' ') || '')
+        this.attributes.set('ref', meta.match(meta_regex.ref)?.[0] || '')
+
+        this.text(content.join(' '))
     }
     copy(): Cell {
         const cell_copy = new Cell(this.tag)
+        cell_copy.type = this.type
+        cell_copy.value = [...this.value]
         cell_copy.replace = this.replace.copy()
         cell_copy.attributes = this.attributes.copy()
         cell_copy.style = this.style.copy()
@@ -201,14 +250,5 @@ export class Cell {
             cell_copy.push(item.copy())
         })
         return cell_copy
-    }
-    private meta_extractor(hivecraft_struct: string) {
-        const [meta, ...content] = hivecraft_struct.split(' ')
-        this.tag = meta.match(meta_regex.tag)?.[0]
-        this.attributes.set('id', meta.match(meta_regex.id)?.[0] || '')
-        this.attributes.append('class', meta.match(meta_regex.class)?.join(' ') || '')
-        this.attributes.set('ref', meta.match(meta_regex.ref)?.[0] || '')
-
-        this.text(content.join(' '))
     }
 }
