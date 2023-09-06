@@ -57,7 +57,6 @@ export class CellStyle extends CellTree {
             render_value = path.resolve(value)
         else
             render_value = `url("${value}")`
-        console.log(value)
         this.imports_list.push({ source: value, render: render_value, url: !!is_url })
         return this
     }

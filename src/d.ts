@@ -34,7 +34,7 @@ export type CallbackCog = {
         imports: { [index: string]: any },
     }
 }
-export type Callback = (cog: CallbackCog) => void
+export type WorkerCallback = (cog: CallbackCog) => void
 
 export type CSSList = CSSStyleDeclaration
 
