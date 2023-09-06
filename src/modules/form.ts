@@ -1,72 +1,150 @@
 import { Cell } from "../cell";
-import { CellLocation } from "../d";
+import { AttrRawType, WorkerCallback, CellLocation, CellRenderOptionsType } from "../d";
 
+export type GroupFormOptions = {
+    default_br?: boolean
+    label_position?: 'before' | 'after',
+    label_default_br?: boolean
+}
 export type FormConfigBox = {
-    label: (name: string, label?: string) => FormConfigBox
-    placeholder: (placeholder: string) => FormConfigBox
+    label: (label?: string) => FormConfigBox
+    placeholder: (placeholder?: string) => FormConfigBox
     value: (value: string) => FormConfigBox
     br: () => FormConfigBox
-    proxy: (ref:string) => FormConfigBox,
-    oninput: (foo_name:string, foo: () => void) => FormConfigBox
+    proxy: (ref: string) => FormConfigBox,
+    oninput: (foo_name: string, foo: WorkerCallback) => FormConfigBox,
+    input: (name: string, type?: string) => FormConfigBox
+    commit: () => Cell
+
 }
 
-export class Form extends Cell {
+const TYPE_AS_TAG = ['textarea']
+
+export class Form {
+    #form: Cell
     form_name: string
-    constructor(name:string) {
-        super('div')
-        
+    constructor(name: string) {
+        this.#form = new Cell('div')
+
         if (name.match(/([\W\d])/))
-        throw new Error('Name of form cannot include symbols and digits')
+            throw new Error('Name of form cannot include symbols and digits')
 
         this.form_name = name
-        this.attributes.set('form', name)
+        this.#form.attributes.set('data-form', name)
     }
-    config_box = (input: Cell): FormConfigBox => {
+    get form(): Cell {
+        return this.#form
+    }
+    private configbox = (input: Cell): FormConfigBox => {
         return {
-            label: (name: string, label?: string) => this.label(input, name, label),
-            placeholder: (placeholder: string) => this.placeholder(input, placeholder),
-            value: (value: string) => this.value(input, value),
-            br: () => {this.push(new Cell('br')); return this.config_box(input)},
-            proxy: (ref:string) => this.proxy(input, ref),
-            oninput: (foo_name:string, foo: () => void) => this.oninput(input, foo_name, foo)
-            
+            label: (label?: string) => this.label(input, label),
+            placeholder: (placeholder?: string) => this.placeholder(input, placeholder),
+            value: (value: string) => this.set_value(input, value),
+            br: () => this.br(input),
+            proxy: (ref: string) => this.proxy(input, ref),
+            oninput: (foo_name: string, foo: WorkerCallback) => this.oninput(input, foo_name, foo),
+            input: (name: string, type: string = 'text') => this.input(name, type),
+            commit: () => this.form
         }
     }
-    private value(input: Cell, value: string): FormConfigBox {
+    private br(input: Cell): FormConfigBox {
+        this.#form.push(new Cell('br'))
+        return this.configbox(input)
+    }
+    private set_value(input: Cell, value: string): FormConfigBox {
         input.attributes.set('value', value)
-        return this.config_box(input)
+        return this.configbox(input)
     }
     private placeholder(input: Cell, placeholder: string): FormConfigBox {
+        if(!placeholder) placeholder = input.attributes.get('name').toString()
         input.attributes.set('placeholder', placeholder)
-        return this.config_box(input)
+        return this.configbox(input)
     }
-    private label(input: Cell, name: string, label?: string): FormConfigBox {
-        name = name.replaceAll(' ', '_')
-        if (label) {
-            const label_element = new Cell('label')
-            label_element.text(label)
-            label_element.attributes.set('name', name)
-            input.push(label_element, CellLocation.Before)
-        }
-        input.attributes.set('name', name)
-        return this.config_box(input)
+    private label(input: Cell, label?: string): FormConfigBox {
+        const label_element = new Cell('label')
+        if(!label) label = input.attributes.get('name').toString()
+        label_element.text(label)
+        label_element.attributes.set('name', input.attributes.get('name').toString())
+        input.push(label_element, CellLocation.Before)
+        return this.configbox(input)
     }
-    private proxy(input:Cell, ref: string){
+    private proxy(input: Cell, ref: string) {
         input.attributes.set('input-proxy', ref)
-        return this.config_box(input)
+        return this.configbox(input)
     }
-    private oninput(input:Cell, foo_name, foo: () => void){
+    private oninput(input: Cell, foo_name, foo: WorkerCallback) {
         input.attributes.set('@input', foo_name)
         input.worker.event('input', foo)
-        return this.config_box(input)
+        return this.configbox(input)
     }
-    input(type: string) {
-        const input = new Cell('input')
+    private groupconfigbox = (group: Cell, name: string, type: string, last?: Cell, options: GroupFormOptions = {}) => {
+        return {
+            option: (
+                label: string,
+                position: 'before' | 'after' = options.label_position || 'before',
+                with_br: boolean = options.label_default_br || false
+            ) => {
+                const label_hide = label.replaceAll(' ', '_').toLocaleLowerCase()
+                const cell = group.cell('input')
+                const id = `${cell.hash}${label_hide}_${name}_${type}`.toLowerCase()
+
+                cell.attributes.set('type', type)
+                cell.attributes.set('id', id)
+                cell.attributes.set('name', name)
+                cell.attributes.set('value', label)
+
+                const label_element = new Cell('label')
+                label_element.text(label)
+                label_element.attributes.set('for', id)
+
+                if (position == 'before') {
+                    cell.push(label_element, CellLocation.Before)
+                    if (with_br) cell.push(new Cell('br'), CellLocation.Before)
+                } else {
+                    if (with_br) cell.push(new Cell('br'), CellLocation.After)
+                    cell.push(label_element, CellLocation.After)
+                }
+
+                if (options?.default_br)
+                    group.cell('br')
+                
+                return this.groupconfigbox(group, name, type, cell, options)
+            },
+            br: () => {
+                group.cell('br')
+                return this.groupconfigbox(group, name, type, last, options)
+            },
+            checked: () => {
+                if (last) last.attributes.set('$', 'checked')
+                return this.groupconfigbox(group, name, type, last, options)
+            },
+            attr: (attributes: AttrRawType) => {
+                if (attributes) last.attributes.from(attributes)
+                return this.groupconfigbox(group, name, type, last, options)
+            },
+            custom: () => last,
+            commit: () => this.form
+        }
+    }
+    group(name: string, type: string, options?: GroupFormOptions) {
+        name = name.replaceAll(' ', '_').toLocaleLowerCase()
+
+        const group = this.#form.cell('div')
+        group.attributes.set('input-group', name)
+        return this.groupconfigbox(group, name, type, null, options)
+    }
+    input(name: string, type: string = 'text') {
+        name = name.replaceAll(' ', '_')
+
+        const input = new Cell(TYPE_AS_TAG.includes(type) ? type : 'input')
         input.attributes.set('type', type)
         input.attributes.set('data-input', null)
-        this.push(input)
+        input.attributes.set('name', name)
 
-        return this.config_box(input)
+        this.#form.push(input)
+        return this.configbox(input)
     }
-
+    render(options: CellRenderOptionsType = {}): string {
+        return this.#form.render(options)
+    }
 }

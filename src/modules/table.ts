@@ -1,17 +1,16 @@
 import { Cell } from "../cell";
 
 type TableContent = string | number | null
-type TableStrip = TableContent[]
 type TableStripComplex = (TableContent | [TableContent, number, number])[]
-type TableType = TableStrip[]
-type TableTypeComplex = TableStripComplex[]
+export type TableArrayComplex = TableStripComplex[]
+export type TableObjectComplex = { [index: string]: TableStripComplex }
+
 
 export class Table extends Cell {
     table_name: string
-    private _symmetric: boolean = false
     private size: [number, number] = [0, 0]
     private _table: Cell
-    constructor(name:string) {
+    constructor(name: string) {
         super('div')
 
         if (name.match(/([\W\d])/))
@@ -19,81 +18,59 @@ export class Table extends Cell {
 
         this.table_name = name
         this.attributes.set('table', this.table_name)
-        
+
         this._table = new Cell('table')
-        this._table.attributes.set('data-table', null)
+        this._table.attributes.set('$module', 'data-table')
         this.push(this._table)
     }
-    set symmetric(value:boolean){
-        this._symmetric = value
-    }
-    push_column(column:  TableStripComplex, tag: string = 'td'): Table{
+    push_column(column: TableStripComplex, tag: string = 'td', with_header: boolean = false): Table {
         this.size[1] = column.length > this.size[1] ? column.length : this.size[1]
         this.size[0]++
-
-        if(!this._table.find((item:Cell) => item?.tag == 'tr'))
-        this._table.cell('tr')
-        
-        this._table.forEach((item:Cell) => {
+        if (!this._table.find((item: Cell) => item?.tag == 'tr'))
+            for (let i in column) this._table.cell('tr')
+        let tag_buffor = tag
+        this._table.for_each((item: Cell, index: number) => {
             const element = column.shift()
-            if (Array.isArray(element))
-                {
-                    const td = item.cell(tag)
-                    td.text(element[0]?.toString() || '')
-                    td.attributes.from({rowspan: element[1].toString(), colspan: element[2].toString()})
-                    return
-                }
-            
-            item.cell(tag).text(element?.toString() || '')
-        }, {only: 'block', tag: ['tr'], self:false})
-
-        if(this._symmetric)
-        column.forEach(item => {
-            const tr = this._table.cell('tr')
-            for(let i =0 ; i< this.size[0] -1 ; i++){
-                tr.cell(tag).text('')
+            if (with_header && index == 0) tag_buffor = 'th'
+            else tag_buffor = tag
+            if (Array.isArray(element)) {
+                const td = item.cell(tag_buffor)
+                td.text(element[0]?.toString() || '')
+                td.attributes.from({ rowspan: element[1].toString(), colspan: element[2].toString() })
+                return
             }
-            tr.cell(tag).text(item.toString() || '')
-        })
-        
+
+            item.cell(tag_buffor).text(element?.toString() || '')
+        }, { only: 'block', tag: ['tr'], self: false })
+
         return this
     }
-    push_row(row: TableStripComplex, tag: string = 'td'): Table{
+    push_row(row: TableStripComplex, tag: string = 'td'): Table {
         this.size[0] = row.length > this.size[0] ? row.length : this.size[0]
         this.size[1]++
 
         const tr = this._table.cell('tr')
         row.forEach(item => {
             const td = tr.cell(tag)
-            if (Array.isArray(item)){
+            if (Array.isArray(item)) {
                 td.text(item[0]?.toString() || '')
-                td.attributes.from({rowspan: item[1].toString(), colspan: item[2].toString()})
+                td.attributes.from({ rowspan: item[1].toString(), colspan: item[2].toString() })
                 return
             }
             td.text(item.toString() || '')
         })
-
-        if(this._symmetric)
-        this._table.forEach((item:Cell) => {    
-            if(item.content.length < this.size[0])
-                item.cell(tag).text('')
-        }, {only: 'block', tag: ['tr'], self:false})
-
         return this
     }
-    put(row:number, column:number, value: TableContent){
-        this._table.forEach((item:Cell, index:number) => {   
-            if(index == row)
-                {
-                    (item.content[column] as Cell).clear_content(false).text(value.toString())
-                }
-        }, {only: 'block', tag: ['tr'], self:false})
-    }
-    from(from_table?: TableTypeComplex) {
-        from_table.forEach(row => {
-            this.push_row(row)
-        })
+    from(from_table?: TableArrayComplex | TableObjectComplex, header: boolean = false) {
+        if (Array.isArray(from_table))
+            from_table.forEach((row, index) => {
+                this.push_row(row, index == 0 && header ? 'th' : 'td')
+            })
+        else {
+            Object.entries(from_table).forEach(([key, value]) => {
+                this.push_column([key, ...value], 'td', header)
+            })
+        }
         return this
     }
-
 }
