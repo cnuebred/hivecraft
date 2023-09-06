@@ -236,9 +236,9 @@ class CoreWorker extends Tree {
         })
     }
     private set_forms() {
-        const forms = document.querySelectorAll('div[form]')
+        const forms = document.querySelectorAll('div[data-form]')
         forms.forEach(divform => {
-            const form_name = divform.getAttribute('form') || '_'
+            const form_name = divform.getAttribute('data-form') || '_'
             const form = new CarbeeForm(divform as HTMLElement)
             this.ext.form[form_name] = form           
         })
