@@ -90,13 +90,14 @@ This program creates a web page using the Hivecraft library. It creates a header
 - [x] attributes as pure book
 - [ ] creating cells chain system - new feature - new patch update
 - [x] cell's text monad - creating wrappers
-- [ ] cell's worker monad - creating scripts
+- [x] cell's worker monad - creating scripts
 - [ ] cdn worker for loop by self items
 - [ ] cdn worker elements dynamic creators
 --- 
 # TODO BBT (Big Brain Time)
  - change all modules to simply functions returned just ready components, and update system to generating cells for other users, just by gitst :thinking:
 
+[Refactor](./refactor.md)
 
 By using Hivecraft, you can streamline your web development workflow and dynamically generate HTML content with ease. Whether you're building simple web pages or complex web applications, Hivecraft has you covered.
 
