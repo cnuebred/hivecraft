@@ -100,7 +100,7 @@ export class Cell {
         let pure_text = text.join(' ')
         pure_text = this.replace.filter(pure_text)
         pure_text = pure_text
-            .replaceAll(new RegExp(`\\[\([\\w.]+\)\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
+            .replaceAll(new RegExp(`\\[\\[\([\\w.]+\)\\]\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
 
         return pure_text
     }
