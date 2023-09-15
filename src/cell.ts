@@ -38,6 +38,7 @@ export class Cell {
     get query() { return `${this.tag}[${this.hash}]` }
 
     set parent(value: Cell) {
+        if(!value) return
         this.#parent = value
         this.replace.from(value.replace)
     }
@@ -57,8 +58,7 @@ export class Cell {
             value.owner = this
             this.#style = value
         } else {
-            this.#style = new CellStyle(this.query, value)
-            this.#style.owner = this
+            this.style.from(value)
         }
     }
     get style(): CellStyle { return this.#style }
@@ -115,7 +115,6 @@ export class Cell {
         this.content.forEach(item => {
             template.push(item.render(this.#cell_render_options_type) as string)
         })
-        // !this.#cell_render_options_type.close && 
         if (!SINGLE_MARKS.includes(this.tag))
             template.push(`</${this.tag}>`)
 
@@ -128,17 +127,12 @@ export class Cell {
         this.attributes.set('ref', name)
         return this
     }
-    // text(text: string | TxtType, location: CellLocation = CellLocation.End): Cell {
-    //     const text_node = typeof text == 'string' ? txt(text) : text
-    //     this.push(text_node, location)
-    //     return this
-    // }
     text(text: string | Cell, wrappers: { tag: WrapperType, attr: AttrRawType }[] = [], location: CellLocation = CellLocation.End): Cell {
         if (this.type == 'text') return this //TODO
         if (text instanceof Cell && text.type == 'text') {
             if (wrappers.length != 0) {
                 let last_child: Cell = text
-                wrappers.forEach(item => {
+                wrappers.forEach(item => { // TODO error...
                     const wrapper = new Cell(item.tag)
                     wrapper.attributes.from(item.attr)
                     last_child.parent = wrapper
@@ -156,7 +150,7 @@ export class Cell {
         }
         return this
     }
-    cell(tag: string, location?: CellLocation): Cell {
+    cell(tag: string = 'div', location?: CellLocation): Cell {
         const cell = new Cell(tag)
         this.push(cell, location)
         return cell
@@ -228,7 +222,6 @@ export class Cell {
             return item.find(callback)
         }
     }
-
     #meta_extractor(hivecraft_struct: string) {
         const [meta, ...content] = hivecraft_struct.split(' ')
         this.tag = meta.match(meta_regex.tag)?.[0]

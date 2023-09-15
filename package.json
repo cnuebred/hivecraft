@@ -10,11 +10,12 @@
   "scripts": {
     "prepublish": "npm run build",
     "publish": "npm publish --access public",
-    "build:cdn": "tsc cdn/cdn.worker.ts --downlevelIteration && minify cdn/cdn.worker.js > cdn/cdn.min.js",
+    "build:cdn": "tsc -d cdn/cdn.worker.ts --downlevelIteration && minify cdn/cdn.worker.js > cdn/cdn.min.js",
     "prebuild": "npm run build:cdn",
     "build": "npx tsc",
     "dev:cdn": "nodemon --watch cdn/cdn.worker.ts --exec \"npm run build:cdn \" ",
-    "dev": "nodemon --exec npx ts-node app.ts"
+    "dev:app": "nodemon --watch app.ts --exec npx ts-node app.ts",
+    "dev": "npm run dev:cdn & npm run dev:app"
   },
   "keywords": [
     "craft",

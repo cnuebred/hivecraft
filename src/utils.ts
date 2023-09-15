@@ -19,7 +19,7 @@ export const SINGLE_MARKS = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 
 export const STYLE_OBJ_FUNCTOR = ['imports', 'query', 'children']
 
 export const meta_regex = {
-    tag: /(?<=\:)(?<tag>\w*)/gm,
+    tag: /^(?<tag>\w*)/gm,
     id: /((?<=\#)(?<id>\w*))/gm,
     class: /((?<=\.)(?<class>\w*))/gm,
     ref: /((?<=\$)(?<ref>\w*))/gm,

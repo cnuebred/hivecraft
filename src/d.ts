@@ -1,3 +1,5 @@
+import { HivecraftForm, HivecraftTable } from "."
+
 export type WrapperType = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'b' | 's' | 'u' | 'i' | 'sup' | 'sub' | 'code' | 'span'
 export type QueryType = string
 export type HashType = string
@@ -25,12 +27,12 @@ export type CallbackCog = {
     item: { [index: string]: any },
     data: {
         proxy: { [index: string]: any },
-        refs: { [index: string]: any },
+        refs: { [index: string]: HTMLElement },
         params: { [index: string]: any },
     },
     ext: {
-        table: { [index: string]: any },
-        form: { [index: string]: any },
+        table: { [index: string]: HivecraftTable },
+        form: { [index: string]: HivecraftForm },
         imports: { [index: string]: any },
     }
 }

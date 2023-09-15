@@ -16,10 +16,10 @@ export class Core extends Cell {
     private header_constructor(init: boolean): void {
         this.#header = new Cell('head')
         if (!init) return
-        this.header.add(':meta').attributes = { charset: 'UTF-8' }
-        this.header.add(':meta').attributes = { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' }
-        this.header.add(':meta').attributes = { name: "viewport", content: 'width=device-width, initial-scale=1.0' }
-        this.header.add(':title TITLE').replace = { TITLE: 'Document' }
+        this.header.add('meta').attributes = { charset: 'UTF-8' }
+        this.header.add('meta').attributes = { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' }
+        this.header.add('meta').attributes = { name: "viewport", content: 'width=device-width, initial-scale=1.0' }
+        this.header.add('title TITLE').replace = { TITLE: 'Document' }
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -56,7 +56,6 @@ export class Core extends Cell {
             text += item.style.render()
             imports.push(...item.style.imports_list)
         }, { only: 'block', self: true })
-
         for (let item of imports) {
             if (item.url)
                 text += `@import ${item.render};\n`
@@ -76,33 +75,38 @@ export class Core extends Cell {
         }, { only: 'block', self: true })
         return text
     }
-    async build(config: CellRenderOptionsType = {}) {
+    async scripts() {
         const script = new Cell('script')
-        const style = new Cell('style')
-        this.header_constructor(true)
-
         const script_raw = await this.generate_scripts()
-        const style_raw = await this.generate_styles()
-
         const scripts_trans = await transform(script_raw, 'ts')
-        const style_trans = await transform(style_raw, 'css')
-
         script.text(scripts_trans)
-        style.text(style_trans)
-
-
         script.set_render_options({ no_script: true })
-        this.set_render_options({ no_script: true })
-
         this.push(script)
-        this.push(style)
         const libs_to_import = ['HIVECRAFT_WORKER'] // to import !important put in Render option
         for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm)) libs_to_import.push(match[4])
-
+    
         IMPORT_LIBS_LIST.forEach(item => { if (item.type == 'style') libs_to_import.push(item.local) })
-
+    
         libs_to_import.filter((item, index, arr) => arr.indexOf(item) == index)
             .forEach(async item => await this.import_libs(item))
+
+        return script
+    }
+    async styles(){
+        const style = new Cell('style')
+        const style_raw = await this.generate_styles()
+        const style_trans = await transform(style_raw, 'css')
+        style.text(style_trans)
+        this.set_render_options({ no_script: true })
+        this.push(style)
+        
+        return style
+    }
+
+    async build(config: CellRenderOptionsType = {}) {
+        this.header_constructor(true)
+        await this.scripts()
+        await this.styles()
 
         if (config.no_script == undefined) config.no_script = true
         this.html_string = this.header.render(config) + this.render(config)

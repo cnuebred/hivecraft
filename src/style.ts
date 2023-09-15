@@ -22,7 +22,7 @@ export class CellStyle extends CellTree {
                 return false;
             }
         }
-        return true;
+        return true && this.imports_list.length == 0;
     }
     push_children(...csss: StyleObject[]) {
         if (this.css.children)

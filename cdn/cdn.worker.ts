@@ -1,5 +1,5 @@
 
-type EventCallback = (cog: any) => void
+export type WorkerCallback = (cog: any) => void
 
 class Tree {
     tree = {}
@@ -64,7 +64,7 @@ const proxy_callback = (container, target, prop, receiver) => {
 }
 
 
-class CarbeeForm {
+export class HivecraftForm {
     form:HTMLElement
     fields: {[index:string]: HTMLElement} = {}
     proxy = deep_proxy({}, proxy_callback)
@@ -112,7 +112,7 @@ class CarbeeForm {
         })
     }
 }
-class CarbeeTable {
+export class HivecraftTable {
     carbee_table:HTMLElement
     table: HTMLElement
     constructor(table: HTMLElement){
@@ -219,7 +219,7 @@ class CarbeeTable {
     }
 }
 
-class CoreWorker extends Tree {
+export class CoreWorker extends Tree {
     constructor() {
         super()
     }
@@ -239,7 +239,7 @@ class CoreWorker extends Tree {
         const forms = document.querySelectorAll('div[data-form]')
         forms.forEach(divform => {
             const form_name = divform.getAttribute('data-form') || '_'
-            const form = new CarbeeForm(divform as HTMLElement)
+            const form = new HivecraftForm(divform as HTMLElement)
             this.ext.form[form_name] = form           
         })
     }
@@ -247,7 +247,7 @@ class CoreWorker extends Tree {
         const tables = document.querySelectorAll('div[table]')
         tables.forEach(divtable => {
             const table_name = divtable.getAttribute('table') || '_'
-            const table = new CarbeeTable(divtable as HTMLElement)
+            const table = new HivecraftTable(divtable as HTMLElement)
             this.ext.table[table_name] = table           
         })
     }
@@ -267,7 +267,7 @@ class CoreWorker extends Tree {
         this.set_table()
         return this
     }
-    $on_event(query: string, event: string, callback: EventCallback) {
+    $on_event(query: string, event: string, callback: WorkerCallback) {
         const self = document.querySelector(query)
         if (!this.tree[query])
             this.tree[query] = {}

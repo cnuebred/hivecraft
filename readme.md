@@ -88,11 +88,11 @@ This program creates a web page using the Hivecraft library. It creates a header
 
 # TODO
 - [x] attributes as pure book
-- [ ] creating cells chain system - new feature - new patch update
+- [x] creating cells chain system - new feature - new patch update
 - [x] cell's text monad - creating wrappers
 - [x] cell's worker monad - creating scripts
-- [ ] cdn worker for loop by self items
-- [ ] cdn worker elements dynamic creators
+- [ ] ~~cdn worker for loop by self items~~
+- [ ] ~~cdn worker elements dynamic creators~~
 --- 
 # TODO BBT (Big Brain Time)
  - change all modules to simply functions returned just ready components, and update system to generating cells for other users, just by gitst :thinking:
