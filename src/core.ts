@@ -37,6 +37,7 @@ export class Core extends Cell {
             local: local,
             package: pack,
             [libs.type == 'style' ? 'href' : 'src']: href,
+            type: "module",
             integrity: hash || null,
             crossorigin: crossorigin || 'anonymous',
             referrerpolicy: referrerpolicy || 'no-referrer',
@@ -68,7 +69,11 @@ export class Core extends Cell {
     }
     private async generate_scripts() {
         let text = ''
-        text += `let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new CoreWorker().init();`
+        // to change for online cdn !
+        text += `
+        import {CoreWorker} from './cdn/cdn.worker.js'
+        let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new CoreWorker().init();
+        `
         this.for_each(async (item: Cell) => {
             if (item.worker.empty()) return
             text += item.worker.join()
@@ -77,6 +82,7 @@ export class Core extends Cell {
     }
     async scripts() {
         const script = new Cell('script')
+        script.attributes.set('type', 'module')
         const script_raw = await this.generate_scripts()
         const scripts_trans = await transform(script_raw, 'ts')
         script.text(scripts_trans)
@@ -84,22 +90,22 @@ export class Core extends Cell {
         this.push(script)
         const libs_to_import = ['HIVECRAFT_WORKER'] // to import !important put in Render option
         for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm)) libs_to_import.push(match[4])
-    
+
         IMPORT_LIBS_LIST.forEach(item => { if (item.type == 'style') libs_to_import.push(item.local) })
-    
+
         libs_to_import.filter((item, index, arr) => arr.indexOf(item) == index)
             .forEach(async item => await this.import_libs(item))
 
         return script
     }
-    async styles(){
+    async styles() {
         const style = new Cell('style')
         const style_raw = await this.generate_styles()
         const style_trans = await transform(style_raw, 'css')
         style.text(style_trans)
         this.set_render_options({ no_script: true })
         this.push(style)
-        
+
         return style
     }
 

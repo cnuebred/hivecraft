@@ -5,6 +5,7 @@ import { CellReplacements } from "./replace"
 import { CELL_RENDER_OPTIONS_DEFAULT, SINGLE_MARKS, meta_regex } from "./utils"
 import { CellWorker } from "./worker"
 import { CellStyle } from "./style"
+import { hivecraft_markdown } from "./modules/markdown"
 
 export class Cell {
     #type: string = 'block'
@@ -38,7 +39,7 @@ export class Cell {
     get query() { return `${this.tag}[${this.hash}]` }
 
     set parent(value: Cell) {
-        if(!value) return
+        if (!value) return
         this.#parent = value
         this.replace.from(value.replace)
     }
@@ -99,6 +100,8 @@ export class Cell {
     #text_render(text: string[]): string {
         let pure_text = text.join(' ')
         pure_text = this.replace.filter(pure_text)
+        if (this.#cell_render_options_type.markdown)
+            pure_text = hivecraft_markdown(pure_text)
         pure_text = pure_text
             .replaceAll(new RegExp(`\\[\\[\([\\w.]+\)\\]\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
 
@@ -109,13 +112,15 @@ export class Cell {
         if (this.type == 'text')
             return this.#text_render(this.value)
 
+        const is_single_tag = SINGLE_MARKS.includes(this.tag)
+
         const template: string[] = []
-        template.push(`<${this.tag}${this.attributes.render()}>`)
+        template.push(`<${this.tag}${this.attributes.render()}${is_single_tag ? ' /' : ''}>`)
 
         this.content.forEach(item => {
             template.push(item.render(this.#cell_render_options_type) as string)
         })
-        if (!SINGLE_MARKS.includes(this.tag))
+        if (!is_single_tag)
             template.push(`</${this.tag}>`)
 
         if (!this.#cell_render_options_type.no_script && !this.worker.empty())
