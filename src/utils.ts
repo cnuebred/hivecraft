@@ -27,6 +27,7 @@ export const meta_regex = {
 export const BASE_QUERY_STYLE_SELECTOR_REPLACE = '@'
 
 export const CELL_RENDER_OPTIONS_DEFAULT: CellRenderOptionsType = {
+    markdown: true,
     wrappers: true,
     no_script: false,
     proxy: {

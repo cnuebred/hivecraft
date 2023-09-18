@@ -51,6 +51,7 @@ export type StyleObject = CssObject & { imports?: string[], query?: QueryType, c
 export type CellRenderOptionsType = {
     close?: boolean
     no_script?: boolean
+    markdown?: boolean
     proxy?: {
         start: string,
         end?: string,
