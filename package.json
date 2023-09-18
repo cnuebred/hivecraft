@@ -10,7 +10,7 @@
   "scripts": {
     "prepublish": "npm run build",
     "publish": "npm publish --access public",
-    "build:cdn": "tsc -d cdn/cdn.worker.ts --downlevelIteration && minify cdn/cdn.worker.js > cdn/cdn.min.js",
+    "build:cdn": "npx tsc -d cdn/cdn.worker.ts --downlevelIteration --target es6 --moduleResolution node && minify cdn/cdn.worker.js > cdn/cdn.min.js",
     "prebuild": "npm run build:cdn",
     "build": "npx tsc",
     "dev:cdn": "nodemon --watch cdn/cdn.worker.ts --exec \"npm run build:cdn \" ",
