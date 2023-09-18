@@ -1,5 +1,5 @@
 
-export type WorkerCallback = (cog: any) => void
+type WorkerCallback = (cog: any) => void
 
 class Tree {
     tree = {}
@@ -64,7 +64,7 @@ const proxy_callback = (container, target, prop, receiver) => {
 }
 
 
-export class HivecraftForm {
+class HivecraftForm {
     form:HTMLElement
     fields: {[index:string]: HTMLElement} = {}
     proxy = deep_proxy({}, proxy_callback)
@@ -112,7 +112,7 @@ export class HivecraftForm {
         })
     }
 }
-export class HivecraftTable {
+class HivecraftTable {
     carbee_table:HTMLElement
     table: HTMLElement
     constructor(table: HTMLElement){
@@ -281,6 +281,5 @@ export class CoreWorker extends Tree {
         })
     }
 }
-
 
 
