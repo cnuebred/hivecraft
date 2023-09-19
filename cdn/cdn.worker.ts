@@ -88,9 +88,9 @@ class HivecraftForm {
     }
     to_object(): object{
         const data = {}
-        Object.entries(this.fields).forEach(([key, value]) => {
-            data[key] = value['value']
-        })
+        for(let field_key in this.fields){
+            data[field_key] = this.fields[field_key]['value'];
+        }
         return data
     }
     async fetch(url: string, headers: object = {}, data: object = {}, options: object = {}): Promise<Response>{
