@@ -20,6 +20,7 @@ export class Core extends Cell {
         this.header.add('meta').attributes = { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' }
         this.header.add('meta').attributes = { name: "viewport", content: 'width=device-width, initial-scale=1.0' }
         this.header.add('title TITLE').replace = { TITLE: 'Document' }
+        this.worker.push_import('HCW', './cdn/cdn.min.js', true)
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -29,23 +30,26 @@ export class Core extends Cell {
     private async import_libs(lib: string) {
         const libs = IMPORT_LIBS_LIST.find(item => item.local == lib)
         if (!libs) return
-        const { local, pack, hash, href, crossorigin, referrerpolicy } = libs
+        const { local, pack, hash, href, crossorigin, referrerpolicy, async } = libs
         libs.type = !libs.type ? (href.endsWith('.js') ? 'script' : 'style') : libs.type
         let tag = libs.type == 'style' ? 'link' : 'script'
+        const href_lib = new Cell(tag)
 
         const default_lib_set = {
             local: local,
             package: pack,
             [libs.type == 'style' ? 'href' : 'src']: href,
-            type: "module",
             integrity: hash || null,
             crossorigin: crossorigin || 'anonymous',
             referrerpolicy: referrerpolicy || 'no-referrer',
         }
         if (libs.type == 'style')
             default_lib_set.rel = 'stylesheet'
+        else {
+            if(async) href_lib.attributes.set('$', 'async')
+            default_lib_set.type = 'module'
+        }
 
-        const href_lib = new Cell(tag)
         href_lib.attributes.from(default_lib_set)
         this.#header.push(href_lib, CellLocation.End)
     }
@@ -69,15 +73,30 @@ export class Core extends Cell {
     }
     private async generate_scripts() {
         let text = ''
+        const imports: typeof this.worker.imports_list = []
         // to change for online cdn !
+        // import {CoreWorker} from './cdn/cdn.worker.js'
         text += `
-        import {CoreWorker} from './cdn/cdn.worker.js'
-        let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new CoreWorker().init();
+        Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
+        Object.freeze(exports);
+        let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new HCW.CoreWorker().init();
         `
         this.for_each(async (item: Cell) => {
             if (item.worker.empty()) return
             text += item.worker.join()
+            imports.push(...item.worker.imports_list)
         }, { only: 'block', self: true })
+        let import_ctx = 'const exports = {};'
+        for (let item of imports) {
+            this.push_lib({
+                href: item.href,
+                local: item.local,
+                pack: item.local,
+                async: item.async
+            })
+            import_ctx += `import * as ${item.local} from '${item.href}';exports['${item.local}']=${item.local};`
+        }
+        text = import_ctx + text
         return text
     }
     async scripts() {

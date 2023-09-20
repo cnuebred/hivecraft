@@ -12,9 +12,10 @@ const scripts = {
 
 export class CellWorker extends CellTree {
     worker_cells: string[] = []
+    imports_list: {local: string, href: string, async: boolean}[] = []
     constructor() { super() }
     empty(): boolean {
-        return this.worker_cells.length == 0
+        return this.worker_cells.length == 0 && this.imports_list.length == 0;
     }
 
     join() { return this.worker_cells.join('') }
@@ -23,6 +24,11 @@ export class CellWorker extends CellTree {
         const script = new Cell('script')
         script.text(this.join())
         return script
+    }
+
+    push_import(key: string, path: string, async: boolean = true): CellTree {
+        this.imports_list.push({ local: key, href: path, async})
+        return this
     }
 
     #worker_cells_push_wrapper(script: string) {

@@ -10,6 +10,7 @@ export type LibType = {
     local: string,
     pack: string,
     href: string,
+    async?: boolean
     hash?: string,
     priority?: boolean,
     crossorigin?: string,
