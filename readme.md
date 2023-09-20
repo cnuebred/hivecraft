@@ -129,6 +129,28 @@ mainContent.cell("a").text("Visit Example Website")
 console.log(core.render());
 ```
 
+```ts
+// Render condition
+    const core = new Core();
+    const header = core.cell()
+    
+    core.worker.pure('onload_init', (item) => {
+        item.data.proxy.new_number = 20
+        item.data.proxy.render_condition = false
+    })
+
+    header.cell('p').text('### Hi Cube')
+    header.cell('h1').text('Welcome to *Hivecraft Library*')
+        .if((item) => {
+            let x = item.data.proxy.new_number
+            return x > 10
+        })
+
+    console.log(core.render())
+```
+
+`onload_` - pure function with this prefix will be ran onload window
+
 This program creates a web page using the Hivecraft library. It creates a header, a main content section, and adds a link to an example website. The generated HTML code is displayed in the console.
 
 # TODO
@@ -137,7 +159,7 @@ This program creates a web page using the Hivecraft library. It creates a header
 - [x] creating cells chain system - new feature - new patch update
 - [x] cell's text monad - creating wrappers
 - [x] cell's worker monad - creating scripts
-- [ ] cell's condition of rendering
+- [x] cell's condition of rendering
 - [ ] ~~cdn worker for loop by self items~~
 - [ ] ~~cdn worker elements dynamic creators~~
 

@@ -4,6 +4,7 @@ type WorkerCallback = (cog: any) => void
 class Tree {
     tree = {}
     data = {
+        pure: {},
         proxy: {},
         refs: {},
         params: {}
@@ -39,13 +40,14 @@ const set_nest = (object: { [index: string]: any }, address: string | string[], 
         else
             object[address_step] = value
 }
-const deep_proxy = (container, callback) => {
+const deep_proxy = (container, callback, only_set: boolean = true) => {
     const handler: ProxyHandler<Object> = {
         get: (target, prop, receiver) => {
             const value = Reflect.get(target, prop, receiver);
             if (typeof value == 'object' && value !== null) {
-                return deep_proxy(value, callback)
+                return deep_proxy(value, callback, only_set)
             }
+            if(!only_set) callback(container, target, prop, receiver)
             return value
         },
         set: (target, prop, receiver) => {
@@ -56,7 +58,7 @@ const deep_proxy = (container, callback) => {
     }
     return new Proxy(container, handler)
 }
-const proxy_callback = (container, target, prop, receiver) => {
+const proxy_callback_render_elements = (container, target, prop, receiver) => {
     const items = document.querySelectorAll(`[proxy_data="${prop}"]`)
     items.forEach(item => {
         item.textContent = read_nest(container, item.getAttribute('proxy_data') || '')
@@ -67,7 +69,7 @@ const proxy_callback = (container, target, prop, receiver) => {
 class HivecraftForm {
     form:HTMLElement
     fields: {[index:string]: HTMLElement} = {}
-    proxy = deep_proxy({}, proxy_callback)
+    proxy = deep_proxy({}, proxy_callback_render_elements)
     constructor(form: HTMLElement){
         this.form = form
         this.init()
@@ -223,6 +225,43 @@ export class CoreWorker extends Tree {
     constructor() {
         super()
     }
+    private render_cog = (query) => {
+        const self = document.querySelector(query)
+        if (!this.tree[query])
+            this.tree[query] = {}
+        const cog = {
+            self,
+            item: this.tree[query],
+            data: this.data,
+            ext: this.ext
+        }
+        return cog
+    }
+
+    private proxy_callback = (container, target, prop, receiver) => {
+        proxy_callback_render_elements(container, target, prop, receiver)
+        this.set_conditions()
+
+    }
+
+    private set_conditions(){
+        const if_elements = document.querySelectorAll('[hc-if]')
+        if_elements.forEach(item => {
+            const hash = item.getAttribute('hc-if')
+            const query = `hc-if_${hash}`
+
+            const foo = this.data.pure[query]
+            console.log(query, foo) 
+            if(foo)
+             {
+             const render_condition:boolean = foo(this.render_cog(`[${hash}]`)) 
+             if(render_condition != null)
+                (item as HTMLElement).style.setProperty('display', render_condition ? 'block' : 'none')
+            }
+
+        })
+        
+    }
     private set_imports() {
         const items = document.querySelectorAll('script[local]')
         items.forEach(item => {
@@ -262,23 +301,29 @@ export class CoreWorker extends Tree {
         this.set_params()
         this.set_imports()
         this.set_refs()
-        this.data.proxy = deep_proxy(this.data.proxy, proxy_callback)
+        this.set_conditions()
+        this.data.proxy = deep_proxy(this.data.proxy, this.proxy_callback)
         this.set_forms()
         this.set_table()
         return this
     }
     $on_event(query: string, event: string, callback: WorkerCallback) {
-        const self = document.querySelector(query)
-        if (!this.tree[query])
-            this.tree[query] = {}
-        self?.addEventListener(event, () => {
-            callback({
-                self,
-                item: this.tree[query],
-                data: this.data,
-                ext: this.ext
-            })
+        const cog = this.render_cog(query)
+        cog.self?.addEventListener(event, () => {
+            callback(cog)
         })
+    }
+    $pure(query:string, name: string, callback: WorkerCallback) {
+        const cog = this.render_cog(query)
+        if(name.startsWith('onload_'))
+            callback(cog)
+        if(name.startsWith('hc-if_'))
+            this.data.proxy[name] = callback(cog)
+
+        this.data.pure[name.replace(/ /gm, '_')] = () => callback(cog)
+    }
+    $proxy(name: string, value: string | boolean | number | null) {
+        this.data.proxy[name.replace(/ /gm, '_')] = value
     }
 }
 

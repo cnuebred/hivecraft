@@ -20,7 +20,8 @@ export class Core extends Cell {
         this.header.add('meta').attributes = { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' }
         this.header.add('meta').attributes = { name: "viewport", content: 'width=device-width, initial-scale=1.0' }
         this.header.add('title TITLE').replace = { TITLE: 'Document' }
-        this.worker.push_import('HCW', './cdn/cdn.min.js', true)
+        // this.worker.push_import('HCW', './cdn/cdn.min.js', true)
+        this.worker.push_import('HCW', './cdn/cdn.worker.js', true)
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -79,7 +80,7 @@ export class Core extends Cell {
         text += `
         Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
         Object.freeze(exports);
-        let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new HCW.CoreWorker().init();
+        export let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new HCW.CoreWorker();
         `
         this.for_each(async (item: Cell) => {
             if (item.worker.empty()) return
@@ -96,7 +97,7 @@ export class Core extends Cell {
             })
             import_ctx += `import * as ${item.local} from '${item.href}';exports['${item.local}']=${item.local};`
         }
-        text = import_ctx + text
+        text = import_ctx + text + 'HIVECRAFT_WORKER.init()'
         return text
     }
     async scripts() {
@@ -107,7 +108,7 @@ export class Core extends Cell {
         script.text(scripts_trans)
         script.set_render_options({ no_script: true })
         this.push(script)
-        const libs_to_import = ['HIVECRAFT_WORKER'] // to import !important put in Render option
+        const libs_to_import = ['HIVECRAFT_WORKER']
         for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm)) libs_to_import.push(match[4])
 
         IMPORT_LIBS_LIST.forEach(item => { if (item.type == 'style') libs_to_import.push(item.local) })

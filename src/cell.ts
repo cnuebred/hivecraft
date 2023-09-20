@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto"
 import { CellAttributes } from "./attributes"
-import { AttrRawType, CellLocation, CellRenderOptionsType, ForEachFilter, HashType, StyleObject, WrapperType, } from "./d"
+import { AttrRawType, CallbackCog, CellLocation, CellRenderOptionsType, ForEachFilter, HashType, StyleObject, WrapperType, } from "./d"
 import { CellReplacements } from "./replace"
 import { CELL_RENDER_OPTIONS_DEFAULT, SINGLE_MARKS, meta_regex } from "./utils"
 import { CellWorker } from "./worker"
@@ -164,6 +164,13 @@ export class Cell {
         this.content = this.content.filter(item => only_text ? !(item.type == 'text') : false)
         return this
     }
+    if(condition: (cog: CallbackCog) => boolean, init: boolean = true): Cell{
+        this.attributes.set('hc-if', this.hash)
+        this.worker.proxy(`hc-if_${this.hash}`, init)
+        this.worker.pure(`hc-if_${this.hash}`, condition)
+
+        return this
+    }
     push(cell_component: Cell, location: CellLocation = CellLocation.End): Cell {
         if (location == CellLocation.Start || location == CellLocation.End)
             cell_component.parent = this
@@ -188,12 +195,12 @@ export class Cell {
      * Represents a cell with a specific structure.
      * The structure is defined using the hivecraft_struct format.
      *
-     * @typedef {string} struct - `:\<tag>#\<id>.\<class or classes>$\<ref> <text>`
+     * @typedef {string} struct - `\<tag>#\<id>.\<class or classes>$\<ref> <text>`
      * @example
-     * ':p#title.highlight$on_click Hello'
+     * 'p#title.highlight$on_click Hello'
      * <p id="title" class="highlight" ref="on_click">Hello</p>
      * @example
-     * ':a.highlight.red$separator Hivecraft'
+     * 'a.highlight.red$separator Hivecraft'
      * <a class="highlight red" ref="separator">Hivecraft</a>
      * 
      * @param {string} struct - The hivecraft_struct format string.

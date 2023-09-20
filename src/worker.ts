@@ -5,8 +5,8 @@ import { CellTree } from "./utils"
 
 const scripts = {
     event: (query: string, event: string, callback: WorkerCallback) => `HIVECRAFT_WORKER.$on_event('${query}', '${event}', ${callback})`,
-    pure: (name: string, callback: WorkerCallback) => `HIVECRAFT_WORKER.pure['${name.replaceAll(/ /gm, '_')}'] = ${callback}`,
-    proxy: (name: string, value: string | number | null) => `HIVECRAFT_WORKER.proxy['${name}']=${value}`,
+    pure: (query: string, name: string, callback: WorkerCallback) => `HIVECRAFT_WORKER.$pure('${query}','${name.replaceAll(/ /gm, '_')}', ${callback})`,
+    proxy: (name: string, value: string | boolean | number | null) => `HIVECRAFT_WORKER.$proxy('${name.replaceAll(/ /gm, '_')}', ${value})`,
 }
 
 
@@ -42,12 +42,13 @@ export class CellWorker extends CellTree {
     }
 
     pure(name: string, callback: WorkerCallback) {
-        const script = scripts.pure(name, callback)
+        const script = scripts.pure(this.query, name, callback)
         this.#worker_cells_push_wrapper(script)
         return this
     }
 
-    proxy(name: string, proxy: string | number | null = null): CellWorker {
+    proxy(name: string, proxy: string | boolean | number | null = null): CellWorker {
+        if(typeof proxy == 'string' ) proxy = `"${proxy}"`
         const script = scripts.proxy(name, proxy)
         this.#worker_cells_push_wrapper(script)
         return this

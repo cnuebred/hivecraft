@@ -2,6 +2,7 @@ type WorkerCallback = (cog: any) => void;
 declare class Tree {
     tree: {};
     data: {
+        pure: {};
         proxy: {};
         refs: {};
         params: {};
@@ -15,6 +16,9 @@ declare class Tree {
 }
 export declare class CoreWorker extends Tree {
     constructor();
+    private render_cog;
+    private proxy_callback;
+    private set_conditions;
     private set_imports;
     private set_refs;
     private set_forms;
@@ -22,5 +26,7 @@ export declare class CoreWorker extends Tree {
     private set_params;
     init(): CoreWorker;
     $on_event(query: string, event: string, callback: WorkerCallback): void;
+    $pure(query: string, name: string, callback: WorkerCallback): void;
+    $proxy(name: string, value: string | boolean | number | null): void;
 }
 export {};
