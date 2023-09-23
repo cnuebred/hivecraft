@@ -13,7 +13,9 @@ export type FormConfigBox = {
     br: () => FormConfigBox
     proxy: (ref: string) => FormConfigBox,
     oninput: (foo_name: string, foo: WorkerCallback) => FormConfigBox,
+    on: (event: string, foo: WorkerCallback) => FormConfigBox,
     input: (name: string, type?: string) => FormConfigBox
+    attr: (attributes: AttrRawType) => FormConfigBox,
     commit: () => Cell
 
 }
@@ -43,12 +45,18 @@ export class Form {
             br: () => this.br(input),
             proxy: (ref: string) => this.proxy(input, ref),
             oninput: (foo_name: string, foo: WorkerCallback) => this.oninput(input, foo_name, foo),
+            on: (event: string, foo: WorkerCallback) => this.on(input, event, foo),
             input: (name: string, type: string = 'text') => this.input(name, type),
+            attr: (attributes: AttrRawType) => this.attr(input, attributes),
             commit: () => this.form
         }
     }
     private br(input: Cell): FormConfigBox {
         this.#form.push(new Cell('br'))
+        return this.configbox(input)
+    }
+    private attr(input: Cell, attributes: AttrRawType){
+        if (attributes) input.attributes.from(attributes)
         return this.configbox(input)
     }
     private set_value(input: Cell, value: string): FormConfigBox {
@@ -72,9 +80,13 @@ export class Form {
         input.attributes.set('input-proxy', ref)
         return this.configbox(input)
     }
-    private oninput(input: Cell, foo_name, foo: WorkerCallback) {
+    private oninput(input: Cell, foo_name: string, foo: WorkerCallback) {
         input.attributes.set('@input', foo_name)
         input.worker.event('input', foo)
+        return this.configbox(input)
+    }
+    private on(input: Cell, event: string, foo: WorkerCallback) {
+        input.worker.event(event, foo)
         return this.configbox(input)
     }
     private groupconfigbox = (group: Cell, name: string, type: string, last?: Cell, options: GroupFormOptions = {}) => {
@@ -89,6 +101,7 @@ export class Form {
                 const id = `${cell.hash}${label_hide}_${name}_${type}`.toLowerCase()
 
                 cell.attributes.set('type', type)
+                cell.attributes.set('$data-input', 'data-input')
                 cell.attributes.set('id', id)
                 cell.attributes.set('name', name)
                 cell.attributes.set('value', label)
@@ -138,7 +151,7 @@ export class Form {
 
         const input = new Cell(TYPE_AS_TAG.includes(type) ? type : 'input')
         input.attributes.set('type', type)
-        input.attributes.set('data-input', null)
+        input.attributes.set('$data-input', 'data-input')
         input.attributes.set('name', name)
 
         this.#form.push(input)

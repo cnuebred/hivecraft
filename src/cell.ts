@@ -91,24 +91,31 @@ export class Cell {
         this.style = new CellStyle()
         this.worker = new CellWorker()
         this.attributes.set('$hash', this.hash)
+        if (tag.match(/[\.\$\#]/gm))
+            this.#meta_extractor(tag)
     }
-    set_render_options(options: CellRenderOptionsType = {}): Cell {
-        this.#cell_render_options_type = { ...this.#cell_render_options_type, ...options }
+    set_render_options(options: CellRenderOptionsType = {}, by_render: boolean = false): Cell {
+        if (by_render)
+            this.#cell_render_options_type = { ...options, ...this.#cell_render_options_type }
+        else
+            this.#cell_render_options_type = { ...this.#cell_render_options_type, ...options }
         this.#replace.separator = this.#cell_render_options_type.replace_global_separator
         return this
     }
     #text_render(text: string[]): string {
         let pure_text = text.join(' ')
+        if (this.parent.tag == 'script' || this.parent.tag == 'style') return pure_text
         pure_text = this.replace.filter(pure_text)
+
         if (this.#cell_render_options_type.markdown)
-            pure_text = hivecraft_markdown(pure_text)
+            pure_text = hivecraft_markdown(pure_text, this.parent.tag)
         pure_text = pure_text
             .replaceAll(new RegExp(`\\[\\[\([\\w.]+\)\\]\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
 
         return pure_text
     }
     render(options: CellRenderOptionsType = {}): string {
-        this.set_render_options(options)
+        this.set_render_options(options, true)
         if (this.type == 'text')
             return this.#text_render(this.value)
 
@@ -148,6 +155,7 @@ export class Cell {
         }
         else {
             const cell_text = new Cell('-')
+            this.set_render_options(this.#cell_render_options_type)
             cell_text.type = 'text'
             cell_text.value = [text as string]
             cell_text.text(cell_text, wrappers)
@@ -164,7 +172,7 @@ export class Cell {
         this.content = this.content.filter(item => only_text ? !(item.type == 'text') : false)
         return this
     }
-    if(condition: (cog: CallbackCog) => boolean, init: boolean = true): Cell{
+    if(condition: (cog: CallbackCog) => boolean, init: boolean = true): Cell {
         this.attributes.set('hc-if', this.hash)
         this.worker.proxy(`hc-if_${this.hash}`, init)
         this.worker.pure(`hc-if_${this.hash}`, condition)
@@ -236,7 +244,7 @@ export class Cell {
     }
     #meta_extractor(hivecraft_struct: string) {
         const [meta, ...content] = hivecraft_struct.split(' ')
-        this.tag = meta.match(meta_regex.tag)?.[0]
+        this.tag = meta.match(meta_regex.tag)?.[0] || 'div'
         this.attributes.set('id', meta.match(meta_regex.id)?.[0] || '')
         this.attributes.append('class', meta.match(meta_regex.class)?.join(' ') || '')
         this.attributes.set('ref', meta.match(meta_regex.ref)?.[0] || '')

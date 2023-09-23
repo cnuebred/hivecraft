@@ -4,6 +4,7 @@ import { readFile, writeFile } from "fs/promises"
 import { transform } from "./bundle"
 import { Cell } from "./cell"
 import { CellReplacements } from "./replace"
+import path from "path"
 
 export class Core extends Cell {
     html_string: string = ''
@@ -21,7 +22,9 @@ export class Core extends Cell {
         this.header.add('meta').attributes = { name: "viewport", content: 'width=device-width, initial-scale=1.0' }
         this.header.add('title TITLE').replace = { TITLE: 'Document' }
         // this.worker.push_import('HCW', './cdn/cdn.min.js', true)
-        this.worker.push_import('HCW', './cdn/cdn.worker.js', true)
+        let worker_path = path.relative(path.resolve('./'), path.join(__dirname, '../cdn/cdn.worker.js'))
+        if (!worker_path.startsWith('.') || !worker_path.startsWith('/')) worker_path = `./${worker_path}`
+        this.worker.push_import('HCW', worker_path.replace(/\\/g, "/"), true)
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -47,7 +50,7 @@ export class Core extends Cell {
         if (libs.type == 'style')
             default_lib_set.rel = 'stylesheet'
         else {
-            if(async) href_lib.attributes.set('$', 'async')
+            if (async) href_lib.attributes.set('$', 'async')
             default_lib_set.type = 'module'
         }
 
@@ -80,7 +83,7 @@ export class Core extends Cell {
         text += `
         Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
         Object.freeze(exports);
-        export let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new HCW.CoreWorker();
+        export let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new HCW.CoreWorker().before_start();
         `
         this.for_each(async (item: Cell) => {
             if (item.worker.empty()) return
@@ -97,7 +100,7 @@ export class Core extends Cell {
             })
             import_ctx += `import * as ${item.local} from '${item.href}';exports['${item.local}']=${item.local};`
         }
-        text = import_ctx + text + 'HIVECRAFT_WORKER.init()'
+        text = import_ctx + text + 'HIVECRAFT_WORKER.after_start()'
         return text
     }
     async scripts() {
@@ -106,7 +109,7 @@ export class Core extends Cell {
         const script_raw = await this.generate_scripts()
         const scripts_trans = await transform(script_raw, 'ts')
         script.text(scripts_trans)
-        script.set_render_options({ no_script: true })
+        script.set_render_options({ no_script: true, markdown: false })
         this.push(script)
         const libs_to_import = ['HIVECRAFT_WORKER']
         for (let match of scripts_trans.matchAll(/(\w+\.imports)((\.|\[')(\w+))/gm)) libs_to_import.push(match[4])
@@ -123,7 +126,7 @@ export class Core extends Cell {
         const style_raw = await this.generate_styles()
         const style_trans = await transform(style_raw, 'css')
         style.text(style_trans)
-        this.set_render_options({ no_script: true })
+        style.set_render_options({ no_script: true, markdown: false })
         this.push(style)
 
         return style

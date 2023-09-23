@@ -10,8 +10,8 @@ declare class Tree {
     ext: {
         form: {};
         table: {};
-        imports: {};
     };
+    imports: {};
     constructor();
 }
 export declare class CoreWorker extends Tree {
@@ -24,7 +24,8 @@ export declare class CoreWorker extends Tree {
     private set_forms;
     private set_table;
     private set_params;
-    init(): CoreWorker;
+    before_start(): CoreWorker;
+    after_start(): CoreWorker;
     $on_event(query: string, event: string, callback: WorkerCallback): void;
     $pure(query: string, name: string, callback: WorkerCallback): void;
     $proxy(name: string, value: string | boolean | number | null): void;

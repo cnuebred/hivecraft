@@ -27,15 +27,16 @@ export type CallbackCog = {
     self: HTMLElement,
     item: { [index: string]: any },
     data: {
+        pure: { [index: string]: any },
         proxy: { [index: string]: any },
         refs: { [index: string]: HTMLElement },
         params: { [index: string]: any },
     },
     ext: {
-        table: { [index: string]: HivecraftTable },
-        form: { [index: string]: HivecraftForm },
-        imports: { [index: string]: any },
+        table: { [index: string]: any },
+        form: { [index: string]: any },
     }
+    imports: { [index: string]: any },
 }
 export type WorkerCallback = (cog: CallbackCog) => void
 

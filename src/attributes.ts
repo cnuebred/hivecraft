@@ -8,7 +8,7 @@ export class CellAttributes {
     static parser(attributes: AttrRawType) {
         const attrs = Object.entries(attributes).map(([key, value]) => {
             if (key.startsWith('$')) return `${value}`
-            if (!key || !value) return ''
+            if (key == null || value == null) return ''
             return `${key}="${value}"`
         }).join(' ')
         return attrs ? ` ${attrs}` : ''

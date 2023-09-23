@@ -19,17 +19,17 @@ export const SINGLE_MARKS = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 
 export const STYLE_OBJ_FUNCTOR = ['imports', 'query', 'children']
 
 export const meta_regex = {
-    tag: /^(?<tag>\w*)/gm,
-    id: /((?<=\#)(?<id>\w*))/gm,
-    class: /((?<=\.)(?<class>\w*))/gm,
-    ref: /((?<=\$)(?<ref>\w*))/gm,
+    tag: /^(?<tag>\w+)/gm,
+    id: /((?<=\#)(?<id>\w+))/gm,
+    class: /((?<=\.)(?<class>\w+))/gm,
+    ref: /((?<=\$)(?<ref>\w+))/gm,
 }
 export const BASE_QUERY_STYLE_SELECTOR_REPLACE = '@'
 
 export const CELL_RENDER_OPTIONS_DEFAULT: CellRenderOptionsType = {
     markdown: true,
     wrappers: true,
-    no_script: false,
+    no_script: true,
     proxy: {
         start: '||',
     },

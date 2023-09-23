@@ -12,8 +12,8 @@ class Tree {
     ext = {
         form: {},
         table: {},
-        imports: {}
     }
+    imports = {}
     constructor() { }
 }
 
@@ -47,7 +47,7 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
             if (typeof value == 'object' && value !== null) {
                 return deep_proxy(value, callback, only_set)
             }
-            if(!only_set) callback(container, target, prop, receiver)
+            if (!only_set) callback(container, target, prop, receiver)
             return value
         },
         set: (target, prop, receiver) => {
@@ -58,44 +58,54 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
     }
     return new Proxy(container, handler)
 }
-const proxy_callback_render_elements = (container, target, prop, receiver) => {
+const proxy_callback_render_elements = (container, prop) => {
     const items = document.querySelectorAll(`[proxy_data="${prop}"]`)
     items.forEach(item => {
         item.textContent = read_nest(container, item.getAttribute('proxy_data') || '')
     })
 }
 
+const proxy_callback_hivecraft_form = (self, container, prop) => {
+    proxy_callback_render_elements(container, prop)
+    self.form.querySelectorAll(`[input-proxy="${prop}"]`).forEach(item => {
+        item['value'] = read_nest(container, item.getAttribute('input-proxy') || '')
+    })
+}
+
 
 class HivecraftForm {
-    form:HTMLElement
-    fields: {[index:string]: HTMLElement} = {}
-    proxy = deep_proxy({}, proxy_callback_render_elements)
-    constructor(form: HTMLElement){
+    form: HTMLElement
+    fields: { [index: string]: HTMLElement } = {}
+    proxy = deep_proxy({}, (container, target, prop) => {
+        proxy_callback_hivecraft_form(this, container, prop)
+    })
+    constructor(form: HTMLElement) {
         this.form = form
         this.init()
     }
-    private init(){
+    private init() {
         const inputs = this.form.querySelectorAll('input[data-input]')
-            inputs.forEach(input => {
-                const name = input.getAttribute('name') || '_'
-                const proxy = input.getAttribute('input-proxy')
-                this.fields[name] = input as HTMLElement
-                if (proxy){
-                    this.proxy[proxy] = input['value']
-                    input.addEventListener('input', () => {
-                        if(proxy) this.proxy[proxy] = input['value']
-                    })
-                }
-            })
+        console.log(inputs)
+        inputs.forEach(input => {
+            const name = input.getAttribute('name') || '_'
+            const proxy = input.getAttribute('input-proxy')
+            this.fields[name] = input as HTMLElement
+            if (proxy) {
+                this.proxy[proxy] = input['value']
+                input.addEventListener('input', () => {
+                    if (proxy) this.proxy[proxy] = input['value']
+                })
+            }
+        })
     }
-    to_object(): object{
+    to_object(): object {
         const data = {}
-        for(let field_key in this.fields){
+        for (let field_key in this.fields) {
             data[field_key] = this.fields[field_key]['value'];
         }
         return data
     }
-    async fetch(url: string, headers: object = {}, data: object = {}, options: object = {}): Promise<Response>{
+    async fetch(url: string, headers: object = {}, data: object = {}, options: object = {}): Promise<Response> {
         const response = await fetch(url, {
             method: 'POST',
             mode: 'cors',
@@ -103,27 +113,27 @@ class HivecraftForm {
                 "Content-Type": "application/json",
                 ...headers
             },
-            body: JSON.stringify({...this.to_object(), ...data}),
+            body: JSON.stringify({ ...this.to_object(), ...data }),
             ...options
         })
         return response
     }
-    reset(){
+    reset() {
         Object.values(this.fields).forEach(item => {
             item['value'] = ''
         })
     }
 }
 class HivecraftTable {
-    carbee_table:HTMLElement
+    carbee_table: HTMLElement
     table: HTMLElement
-    constructor(table: HTMLElement){
+    constructor(table: HTMLElement) {
         this.carbee_table = table
         this.table = table.querySelector('table') as HTMLElement
         this.init()
     }
-    init(){
-        
+    init() {
+
     }
     find(row: number, column: number): HTMLElement | null {
         const rows = this.table.getElementsByTagName('tr');
@@ -137,17 +147,17 @@ class HivecraftTable {
     }
     get(row: number, column: number): string | null {
         const cell = this.find(row, column)
-       return cell ? cell.textContent : null
+        return cell ? cell.textContent : null
     }
     set(row: number, column: number, value: string | number | null): void {
         const cell = this.find(row, column)
-        if(cell)
-            cell.textContent = (value || '').toString() 
+        if (cell)
+            cell.textContent = (value || '').toString()
     }
     add_column(for_rows?: number[]) {
         const rows = this.table.getElementsByTagName('tr')
         for (let i = 0; i < rows.length; i++) {
-            if(for_rows && !for_rows.includes(i)) continue
+            if (for_rows && !for_rows.includes(i)) continue
             const cell = document.createElement('td')
             rows[i].appendChild(cell)
         }
@@ -175,14 +185,14 @@ class HivecraftTable {
         const data: object[] = []
         const keys: string[] = []
         this.table.querySelectorAll('tr').forEach((row, row_index) => {
-            data[row_index] = {} 
+            data[row_index] = {}
             row.querySelectorAll('th, td').forEach((column, column_index) => {
-                if(row_index == 0)
+                if (row_index == 0)
                     keys.push(column.textContent || '')
 
                 const column_name = keys[column_index] == undefined ? `column_${column_index}` : keys[column_index]
-                data[row_index][column_name] = column.textContent 
-            })  
+                data[row_index][column_name] = column.textContent
+            })
         })
 
 
@@ -233,39 +243,39 @@ export class CoreWorker extends Tree {
             self,
             item: this.tree[query],
             data: this.data,
-            ext: this.ext
+            ext: this.ext,
+            imports: this.imports
         }
         return cog
     }
 
-    private proxy_callback = (container, target, prop, receiver) => {
-        proxy_callback_render_elements(container, target, prop, receiver)
+    private proxy_callback = (container, target, prop) => {
+        proxy_callback_render_elements(container, prop)
         this.set_conditions()
 
     }
 
-    private set_conditions(){
+    private set_conditions() {
         const if_elements = document.querySelectorAll('[hc-if]')
         if_elements.forEach(item => {
             const hash = item.getAttribute('hc-if')
             const query = `hc-if_${hash}`
 
             const foo = this.data.pure[query]
-            console.log(query, foo) 
-            if(foo)
-             {
-             const render_condition:boolean = foo(this.render_cog(`[${hash}]`)) 
-             if(render_condition != null)
-                (item as HTMLElement).style.setProperty('display', render_condition ? 'block' : 'none')
+            console.log(query, foo)
+            if (foo) {
+                const render_condition: boolean = foo(this.render_cog(`[${hash}]`))
+                if (render_condition != null)
+                    (item as HTMLElement).style.setProperty('display', render_condition ? 'block' : 'none')
             }
 
         })
-        
+
     }
     private set_imports() {
         const items = document.querySelectorAll('script[local]')
         items.forEach(item => {
-            this.ext.imports[item.getAttribute('local') || ''] = window[item.getAttribute('package') || '']
+            this.imports[item.getAttribute('local') || ''] = window[item.getAttribute('package') || '']
         })
     }
     private set_refs() {
@@ -279,25 +289,25 @@ export class CoreWorker extends Tree {
         forms.forEach(divform => {
             const form_name = divform.getAttribute('data-form') || '_'
             const form = new HivecraftForm(divform as HTMLElement)
-            this.ext.form[form_name] = form           
+            this.ext.form[form_name] = form
         })
     }
-    private set_table(){
+    private set_table() {
         const tables = document.querySelectorAll('div[table]')
         tables.forEach(divtable => {
             const table_name = divtable.getAttribute('table') || '_'
             const table = new HivecraftTable(divtable as HTMLElement)
-            this.ext.table[table_name] = table           
+            this.ext.table[table_name] = table
         })
     }
-    private set_params(){
+    private set_params() {
         const url_params = new URLSearchParams(window.location.search)
         const it = url_params.entries()
-        for (let [key, value] of it){
+        for (let [key, value] of it) {
             this.data.params[key.toString()] = value.toString()
         }
     }
-    init(): CoreWorker {
+    before_start(): CoreWorker {
         this.set_params()
         this.set_imports()
         this.set_refs()
@@ -307,17 +317,21 @@ export class CoreWorker extends Tree {
         this.set_table()
         return this
     }
+    after_start(): CoreWorker {
+        this.set_conditions()
+        return this
+    }
     $on_event(query: string, event: string, callback: WorkerCallback) {
         const cog = this.render_cog(query)
         cog.self?.addEventListener(event, () => {
             callback(cog)
         })
     }
-    $pure(query:string, name: string, callback: WorkerCallback) {
+    $pure(query: string, name: string, callback: WorkerCallback) {
         const cog = this.render_cog(query)
-        if(name.startsWith('onload_'))
+        if (name.startsWith('onload_'))
             callback(cog)
-        if(name.startsWith('hc-if_'))
+        if (name.startsWith('hc-if_'))
             this.data.proxy[name] = callback(cog)
 
         this.data.pure[name.replace(/ /gm, '_')] = () => callback(cog)
