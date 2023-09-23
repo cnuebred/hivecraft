@@ -1,0 +1,106 @@
+body {
+  margin: 0px;
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    Liberation Mono, Courier New, monospace;
+  user-select: none;
+}
+
+core {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: flex-end;
+  align-items: center;
+  text-align: center;
+  max-width: 80%;
+  .timer_render {
+    font-size: 18vw;
+    margin: 25px 0px 25px 0px;
+  }
+}
+
+.templates {
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+p {
+  font-size: 1.2rem;
+}
+
+[ref="message_panel"] {
+  width: 100%;
+  height: 80px;
+  resize: none;
+  border: 3px solid black;
+  padding: 10px;
+  word-wrap: break-word;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+@keyframes pulse-text-shadow {
+  0% {
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); /* Początkowy cień */
+  }
+  50% {
+    text-shadow: 0 0 25px  rgb(201, 0, 0); /* Maksymalny cień (połowa animacji) */
+  }
+  100% {
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); /* Powrót do początkowego cienia */
+  }
+}
+
+.important-text {
+  animation: pulse-text-shadow 1s infinite; 
+}
+
+
+@keyframes pulse-shadow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Początkowy cień */
+  }
+  50% {
+    box-shadow: 0 0 70px rgba(255, 0, 0, 0.941); /* Maksymalny cień (połowa animacji) */
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5); /* Powrót do początkowego cienia */
+  }
+}
+.important{
+  animation: pulse-shadow 1s infinite; /* Animacja trwa 1 sekundę i jest zapętlona */
+}
+
+div[data-form="timer_setter"] input {
+  margin: 4px;
+  border: 3px solid black;
+  border-radius: 5px;
+  font-size: 24px;
+  height: auto;
+  width: 55px;
+}
+
+button {
+  background-color: white;
+  border: 3px solid black;
+  margin: 2px;
+  border-radius: 5px;
+  color: black;
+  padding: 0.6rem 2.5vw;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: background-color 0.2s, color 0.2s;
+  cursor: pointer;
+  &:hover {
+    background-color: black;
+    color: white;
+  }
+  &:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+}
