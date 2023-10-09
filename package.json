@@ -1,6 +1,6 @@
 {
   "name": "@cnuebred/hivecraft",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Hivecraft is an package that allows you to create dynamic web pages using declarative JavaScript code. With Hivecraft, you can easily generate interactive elements such as forms and tables, manipulate them, and create stylish interfaces. The package also provides integration with libraries like axios and CryptoJS, enabling network requests and data encryption.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
