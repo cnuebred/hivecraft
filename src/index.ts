@@ -1,7 +1,7 @@
 import { CellAttributes } from "./attributes";
 import { Cell } from "./cell";
 import { Core } from "./core";
-import { CellLocation, CallbackCog, StyleObject, CssObject } from "./d";
+import { CellLocation,WorkerCallback, CallbackCog, StyleObject, CssObject } from "./d";
 import { Form } from "./modules/form";
 import { Table } from "./modules/table";
 import { CellReplacements } from "./replace";
@@ -17,6 +17,7 @@ export {
     CellReplacements,
     CellLocation,
     CellAttributes,
+    WorkerCallback,
     CellStyle,
     CELL_RENDER_OPTIONS_DEFAULT,
     CellWorker,

@@ -10,6 +10,7 @@ export type LibType = {
     local: string,
     pack: string,
     href: string,
+    file?: boolean
     async?: boolean
     hash?: string,
     priority?: boolean,
@@ -38,13 +39,13 @@ export type CallbackCog = {
     }
     imports: { [index: string]: any },
 }
-export type WorkerCallback = (cog: CallbackCog) => void
+export type WorkerCallback = (cog: CallbackCog, event?: Event) => void
 
 export type CSSList = CSSStyleDeclaration
 
 export type EventType = string
 
-export interface Event {
+export interface HivecraftEvent {
     type: string,
     callback: (...arg: any[]) => void
 }

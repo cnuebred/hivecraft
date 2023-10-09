@@ -6,7 +6,14 @@ export class CellReplacements {
     } = { start: '', end: '' }
     filter(text: string, separator = this.separator): string {
         Object.entries(this.replacement).forEach(([key, value]) => {
-            text = text.replaceAll(`${separator?.start || ''}${key}${separator?.end || ''}`, value.toString())
+            const iter = () => {
+                const index = text.indexOf(`${separator?.start || ''}${key}${separator?.end || ''}`)
+                if(index == -1) return 
+                if(text[index-1] == '\\') return
+                text = text.replaceAll(`${separator?.start || ''}${key}${separator?.end || ''}`, value.toString())
+                iter()
+            }
+            iter()
         })
         return text
     }
@@ -26,7 +33,7 @@ export class CellReplacements {
     }
     copy(): CellReplacements {
         const replace_copy = new CellReplacements()
-        replace_copy.separator = this.separator
+        replace_copy.separator = {...this.separator}
         replace_copy.from(this.replacement)
         return replace_copy
     }

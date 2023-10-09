@@ -73,6 +73,7 @@ export class Form {
         if(!label) label = input.attributes.get('name').toString()
         label_element.text(label)
         label_element.attributes.set('name', input.attributes.get('name').toString())
+        label_element.attributes.set('for', input.attributes.get('id').toString())
         input.push(label_element, CellLocation.Before)
         return this.configbox(input)
     }
@@ -152,6 +153,7 @@ export class Form {
         const input = new Cell(TYPE_AS_TAG.includes(type) ? type : 'input')
         input.attributes.set('type', type)
         input.attributes.set('$data-input', 'data-input')
+        input.attributes.set('id', `${this.form_name}_${name}`)
         input.attributes.set('name', name)
 
         this.#form.push(input)

@@ -2,7 +2,7 @@ import { randomBytes } from "crypto"
 import { CellAttributes } from "./attributes"
 import { AttrRawType, CallbackCog, CellLocation, CellRenderOptionsType, ForEachFilter, HashType, StyleObject, WrapperType, } from "./d"
 import { CellReplacements } from "./replace"
-import { CELL_RENDER_OPTIONS_DEFAULT, SINGLE_MARKS, meta_regex } from "./utils"
+import { CELL_RENDER_OPTIONS_DEFAULT, PROXY_REGEX, SINGLE_MARKS, meta_regex } from "./utils"
 import { CellWorker } from "./worker"
 import { CellStyle } from "./style"
 import { hivecraft_markdown } from "./modules/markdown"
@@ -106,11 +106,11 @@ export class Cell {
         let pure_text = text.join(' ')
         if (this.parent.tag == 'script' || this.parent.tag == 'style') return pure_text
         pure_text = this.replace.filter(pure_text)
-
+        // Queue
         if (this.#cell_render_options_type.markdown)
             pure_text = hivecraft_markdown(pure_text, this.parent.tag)
-        pure_text = pure_text
-            .replaceAll(new RegExp(`\\[\\[\([\\w.]+\)\\]\\]`, 'gm'), (match, _1) => `<span proxy_data="${_1}"></span>`)
+            pure_text = pure_text
+            .replaceAll(new RegExp(PROXY_REGEX, 'g'), (match, _1) => `<span proxy_data="${_1}"></span>`)
 
         return pure_text
     }
@@ -122,7 +122,8 @@ export class Cell {
         const is_single_tag = SINGLE_MARKS.includes(this.tag)
 
         const template: string[] = []
-        template.push(`<${this.tag}${this.attributes.render()}${is_single_tag ? ' /' : ''}>`)
+        const attr = this.attributes.render()
+        template.push(`<${this.tag}${attr}${is_single_tag ? ' /' : ''}>`)
 
         this.content.forEach(item => {
             template.push(item.render(this.#cell_render_options_type) as string)
@@ -139,27 +140,26 @@ export class Cell {
         this.attributes.set('ref', name)
         return this
     }
-    text(text: string | Cell, wrappers: { tag: WrapperType, attr: AttrRawType }[] = [], location: CellLocation = CellLocation.End): Cell {
-        if (this.type == 'text') return this //TODO
+    text(text: string | Cell, wrappers: { tag?: WrapperType, attr?: AttrRawType }[] = [], location: CellLocation = CellLocation.End): Cell {
+        if (this.type == 'text' && this.tag != '-') return this //TODO
         if (text instanceof Cell && text.type == 'text') {
+            let last_child: Cell = text
             if (wrappers.length != 0) {
-                let last_child: Cell = text
                 wrappers.forEach(item => { // TODO error...
-                    const wrapper = new Cell(item.tag)
+                    const wrapper = new Cell(item.tag || 'span')
                     wrapper.attributes.from(item.attr)
-                    last_child.parent = wrapper
+                    wrapper.push(last_child.copy())
+                    last_child = wrapper
                 })
             }
-            else
-                this.push(text, location)
+            this.push(last_child, location)
         }
         else {
             const cell_text = new Cell('-')
             this.set_render_options(this.#cell_render_options_type)
             cell_text.type = 'text'
             cell_text.value = [text as string]
-            cell_text.text(cell_text, wrappers)
-            this.push(cell_text, location)
+            this.text(cell_text, wrappers)
         }
         return this
     }
@@ -176,7 +176,9 @@ export class Cell {
         this.attributes.set('hc-if', this.hash)
         this.worker.proxy(`hc-if_${this.hash}`, init)
         this.worker.pure(`hc-if_${this.hash}`, condition)
-
+        this.attributes.from({
+            style: `display: ${init ? 'block' : 'none'}`
+        })
         return this
     }
     push(cell_component: Cell, location: CellLocation = CellLocation.End): Cell {

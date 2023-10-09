@@ -19,6 +19,21 @@ const regex = {
         regex: /(?<!\\)(#{1,6}) (.+)/gm,
         tag: (_, _1, _2, _3, parent_tag) => `</${parent_tag}><h${_1.length}>${_2}</h${_1.length}><${parent_tag}>`
     },
+    link: {
+        regex: /\[([^\[]+)\](\(.*\))/gm,
+        tag: (_, _1, _2, _3, parent_tag) => {
+            const match = _2.matchAll(/\((.*?)(\|(.+))*\|?\)/gm).next().value
+            const href = match[1]
+            let attrs = ''
+            if (match[3])
+                for (const attr of match[3].split('|')) {
+                    if (!attr) continue
+                    const [name, value] = attr.split('=')
+                    attrs += ` ${name}="${value}"`
+                }
+            return `<a href="${href}"${attrs}>${_1}</a>`
+        }
+    },
 }
 const cleaner = /(?<!\\)(\\)/gm
 const br = /(?<!\\)(\n)/gm

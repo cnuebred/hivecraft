@@ -6,13 +6,13 @@ import { CellTree } from "./utils"
 const scripts = {
     event: (query: string, event: string, callback: WorkerCallback) => `HIVECRAFT_WORKER.$on_event('${query}', '${event}', ${callback})`,
     pure: (query: string, name: string, callback: WorkerCallback) => `HIVECRAFT_WORKER.$pure('${query}','${name.replaceAll(/ /gm, '_')}', ${callback})`,
-    proxy: (name: string, value: string | boolean | number | null) => `HIVECRAFT_WORKER.$proxy('${name.replaceAll(/ /gm, '_')}', ${value})`,
+    proxy: (name: string, value: string | boolean | number | null, json: boolean) => `HIVECRAFT_WORKER.$proxy('${name.replaceAll(/ /gm, '_')}', ${value}, ${json})`,
 }
 
 
 export class CellWorker extends CellTree {
     worker_cells: string[] = []
-    imports_list: {local: string, href: string, async: boolean}[] = []
+    imports_list: {local: string, href: string, async: boolean, file: boolean}[] = []
     constructor() { super() }
     empty(): boolean {
         return this.worker_cells.length == 0 && this.imports_list.length == 0;
@@ -26,8 +26,8 @@ export class CellWorker extends CellTree {
         return script
     }
 
-    push_import(key: string, path: string, async: boolean = true): CellTree {
-        this.imports_list.push({ local: key, href: path, async})
+    push_import(key: string, path: string, async: boolean = true, file:boolean = true): CellTree {
+        this.imports_list.push({ local: key, href: path, async, file})
         return this
     }
 
@@ -47,9 +47,9 @@ export class CellWorker extends CellTree {
         return this
     }
 
-    proxy(name: string, proxy: string | boolean | number | null = null): CellWorker {
-        if(typeof proxy == 'string' ) proxy = `"${proxy}"`
-        const script = scripts.proxy(name, proxy)
+    proxy(name: string, proxy: string | boolean | number | null = null, json: boolean = false): CellWorker {
+        if(typeof proxy == 'string') proxy = json ? `'${proxy}'` : `"${proxy}"`
+        const script = scripts.proxy(name, proxy, json)
         this.#worker_cells_push_wrapper(script)
         return this
     }

@@ -24,6 +24,9 @@ export const meta_regex = {
     class: /((?<=\.)(?<class>\w+))/gm,
     ref: /((?<=\$)(?<ref>\w+))/gm,
 }
+
+export const PROXY_REGEX = /\[\[(?<proxy>[\w.]+)\]\]/m
+
 export const BASE_QUERY_STYLE_SELECTOR_REPLACE = '@'
 
 export const CELL_RENDER_OPTIONS_DEFAULT: CellRenderOptionsType = {
@@ -35,8 +38,8 @@ export const CELL_RENDER_OPTIONS_DEFAULT: CellRenderOptionsType = {
     },
     replace: false,
     replace_global_separator: {
-        start: '',
-        end: ''
+        start: '{{',
+        end: '}}'
     }
 }
 

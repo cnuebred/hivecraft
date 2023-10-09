@@ -1,30 +1,36 @@
 import { CellRenderOptionsType, LibType, CoreHtmlConfigRender, CorePdfConfigRender, CellLocation } from "./d"
-import { IMPORT_LIBS_LIST } from './utils'
+import { CELL_RENDER_OPTIONS_DEFAULT, IMPORT_LIBS_LIST } from './utils'
 import { readFile, writeFile } from "fs/promises"
 import { transform } from "./bundle"
 import { Cell } from "./cell"
 import { CellReplacements } from "./replace"
 import path from "path"
 
+
 export class Core extends Cell {
     html_string: string = ''
+    caller: path.ParsedPath
     #header: Cell
     constructor() {
         super('core')
         this.header_constructor(false)
+        this.caller = path.parse('/' +(new Error()).stack.split("\n")[2].split(path.sep).slice(1)
+        .join(path.sep).split(":")[0])
     }
     get header(): Cell { return this.#header }
     private header_constructor(init: boolean): void {
-        this.#header = new Cell('head')
-        if (!init) return
+        if (!init) {
+            this.#header = new Cell('head')
+            return
+        }
         this.header.add('meta').attributes = { charset: 'UTF-8' }
         this.header.add('meta').attributes = { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' }
         this.header.add('meta').attributes = { name: "viewport", content: 'width=device-width, initial-scale=1.0' }
-        this.header.add('title TITLE').replace = { TITLE: 'Document' }
-        // this.worker.push_import('HCW', './cdn/cdn.min.js', true)
-        let worker_path = path.relative(path.resolve('./'), path.join(__dirname, '../cdn/cdn.worker.js'))
+        this.header.add('title {{TITLE}}').replace = { TITLE: 'Document' }
+
+        let worker_path = path.relative(path.resolve('./'), path.join(__dirname, '../cdn/cdn.min.js'))
         if (!worker_path.startsWith('.') || !worker_path.startsWith('/')) worker_path = `./${worker_path}`
-        this.worker.push_import('HCW', worker_path.replace(/\\/g, "/"), true)
+        this.worker.push_import('HCW', worker_path.replace(/\\/g, "/"), true, false)
     }
     async push_lib(lib: LibType) {
         lib.priority = true
@@ -52,6 +58,7 @@ export class Core extends Cell {
         else {
             if (async) href_lib.attributes.set('$', 'async')
             default_lib_set.type = 'module'
+            // default_lib_set.type = 'text/javascript'
         }
 
         href_lib.attributes.from(default_lib_set)
@@ -68,39 +75,42 @@ export class Core extends Cell {
         for (let item of imports) {
             if (item.url)
                 text += `@import ${item.render};\n`
-            else
+            else {
                 await readFile(item.render).then(data => {
                     text = data.toString() + text
                 })
+            }
         }
         return text
     }
     private async generate_scripts() {
         let text = ''
         const imports: typeof this.worker.imports_list = []
-        // to change for online cdn !
-        // import {CoreWorker} from './cdn/cdn.worker.js'
-        text += `
+        text += `let HIVECRAFT_WORKER;window.onload = () => {
         Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
-        Object.freeze(exports);
-        export let HIVECRAFT_WORKER; HIVECRAFT_WORKER = new HCW.CoreWorker().before_start();
-        `
+        Object.freeze(exports);HIVECRAFT_WORKER = new CoreWorker().before_start();`
         this.for_each(async (item: Cell) => {
             if (item.worker.empty()) return
             text += item.worker.join()
             imports.push(...item.worker.imports_list)
         }, { only: 'block', self: true })
-        let import_ctx = 'const exports = {};'
+        let import_ctx = ';const exports = {};'
         for (let item of imports) {
-            this.push_lib({
-                href: item.href,
-                local: item.local,
-                pack: item.local,
-                async: item.async
-            })
-            import_ctx += `import * as ${item.local} from '${item.href}';exports['${item.local}']=${item.local};`
+            if (item.href.startsWith('http') || item.file) {
+                this.push_lib({
+                    href: item.href,
+                    local: item.local,
+                    pack: item.local,
+                    async: item.async
+                })
+                import_ctx += `import * as ${item.local} from '${item.href}';exports['${item.local}']=${item.local};`
+            } else {
+                await readFile(item.href).then(data => {
+                    import_ctx = import_ctx + data.toString()
+                })
+            }
         }
-        text = import_ctx + text + 'HIVECRAFT_WORKER.after_start()'
+        text = import_ctx + text + 'HIVECRAFT_WORKER.after_start();};'
         return text
     }
     async scripts() {
@@ -138,20 +148,28 @@ export class Core extends Cell {
         await this.styles()
 
         if (config.no_script == undefined) config.no_script = true
-        this.html_string = this.header.render(config) + this.render(config)
-        return new Build(this.html_string, this.replace.copy())
+        const html = new Cell('html')
+        html.attributes.set('lang', '{{LANG}}')
+        html.replace = this.replace.copy()
+        html.replace.set('LANG', 'en')
+        html.push(this.header)
+        html.push(new Cell('body').push(this))
+        this.html_string = html.render(config)
+        return new Build(this.html_string, html.replace.copy(), this.caller)
     }
 }
 
 export class Build {
     site: string
     replace: CellReplacements
-    constructor(site: string, replace: CellReplacements) {
+    caller: path.ParsedPath
+    constructor(site: string, replace: CellReplacements, caller: path.ParsedPath) {
         this.site = site
         this.replace = replace
+        this.caller = caller
     }
     get size() { return Buffer.byteLength(this.site) }
-    html(replace: { [index: string]: string | number }, config: CoreHtmlConfigRender = {}): string {
+    html(replace: { [index: string]: string | number }, config: CoreHtmlConfigRender = CELL_RENDER_OPTIONS_DEFAULT): string {
         this.replace.separator = config.replace_global_separator
         let new_site = this.replace.filter(this.site)
 
@@ -161,7 +179,10 @@ export class Build {
         new_site = my_replace.filter(new_site)
 
         if (config.to_file)
-            writeFile(config.to_file, new_site)
+            {                
+                const path_render = path.join(this.caller.dir, config.to_file)
+                writeFile(path_render, new_site)
+            }
         return new_site
     }
 }
