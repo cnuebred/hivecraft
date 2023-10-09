@@ -1,5 +1,5 @@
 
-type WorkerCallback = (cog: any) => void
+type WorkerCallback = (cog: any, eve?: Event) => void
 
 class Tree {
     tree = {}
@@ -44,6 +44,9 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
     const handler: ProxyHandler<Object> = {
         get: (target, prop, receiver) => {
             const value = Reflect.get(target, prop, receiver);
+            if ((prop as string).startsWith('__') && (prop as string).endsWith('__'))
+                return value
+
             if (typeof value == 'object' && value !== null) {
                 return deep_proxy(value, callback, only_set)
             }
@@ -51,6 +54,13 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
             return value
         },
         set: (target, prop, receiver) => {
+            if ((prop as string).startsWith('__') && (prop as string).endsWith('__'))
+                return true
+            if (typeof receiver == 'object' && receiver !== null) {
+                receiver['__hc_parent_name__'] = target['__hc_parent_name__'] 
+                ? `${target['__hc_parent_name__']}.${prop as string}}` 
+                : prop
+            }
             set_nest(target, prop as string, receiver)
             callback(container, target, prop, receiver)
             return true
@@ -58,13 +68,41 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
     }
     return new Proxy(container, handler)
 }
-const proxy_callback_render_elements = (container, prop) => {
-    const items = document.querySelectorAll(`[proxy_data="${prop}"]`)
+const proxy_callback_render_elements = async (container, prop) => {
+    let proxy_data = prop
+    if (container.__hc_parent_name__)
+        proxy_data = `${container['__hc_parent_name__']}.${prop}`
+    const items = document.querySelectorAll(`[proxy_data="${proxy_data}"]`)
     items.forEach(item => {
-        item.textContent = read_nest(container, item.getAttribute('proxy_data') || '')
+        item.textContent = read_nest(container, prop as string || '')
     })
 }
+const proxy_callback_render_attributes = async (container, prop) => {
+    let proxy_data = prop
+    if (container.__hc_parent_name__)
+        proxy_data = `${container['__hc_parent_name__']}.${prop}`
 
+    const items = document.querySelectorAll(`[proxy_attr$="${proxy_data}"]`)
+
+    for(const item of items){
+        const proxy_attribute = item.getAttribute('proxy_attr') as string
+
+        const [attr, value] = proxy_attribute.split(' ')
+        .find(item =>item.split(':')[1].endsWith(proxy_data) )
+        ?.split(':') as string []
+
+        if(!attr || !value) return
+        const origin_proxy_data = item.getAttribute(attr)
+
+        if (!item['origin_proxy_attr'])
+            item['origin_proxy_attr'] = origin_proxy_data
+
+        const target_proxy_attr = item['origin_proxy_attr']
+            .replaceAll(`[[${proxy_data}]]`, read_nest(container, prop))
+
+        item.setAttribute(attr, target_proxy_attr)
+    }
+}
 const proxy_callback_hivecraft_form = (self, container, prop) => {
     proxy_callback_render_elements(container, prop)
     self.form.querySelectorAll(`[input-proxy="${prop}"]`).forEach(item => {
@@ -85,7 +123,6 @@ class HivecraftForm {
     }
     private init() {
         const inputs = this.form.querySelectorAll('input[data-input]')
-        console.log(inputs)
         inputs.forEach(input => {
             const name = input.getAttribute('name') || '_'
             const proxy = input.getAttribute('input-proxy')
@@ -93,7 +130,8 @@ class HivecraftForm {
             if (proxy) {
                 this.proxy[proxy] = input['value']
                 input.addEventListener('input', () => {
-                    if (proxy) this.proxy[proxy] = input['value']
+                    const proxy_name = input.getAttribute('input-proxy')
+                    if (proxy_name) this.proxy[proxy_name] = input['value']
                 })
             }
         })
@@ -248,13 +286,11 @@ export class CoreWorker extends Tree {
         }
         return cog
     }
-
     private proxy_callback = (container, target, prop) => {
         proxy_callback_render_elements(container, prop)
+        proxy_callback_render_attributes(container, prop)
         this.set_conditions()
-
     }
-
     private set_conditions() {
         const if_elements = document.querySelectorAll('[hc-if]')
         if_elements.forEach(item => {
@@ -262,12 +298,10 @@ export class CoreWorker extends Tree {
             const query = `hc-if_${hash}`
 
             const foo = this.data.pure[query]
-            console.log(query, foo)
-            if (foo) {
-                const render_condition: boolean = foo(this.render_cog(`[${hash}]`))
-                if (render_condition != null)
-                    (item as HTMLElement).style.setProperty('display', render_condition ? 'block' : 'none')
-            }
+            const render_condition: boolean = !foo ? this.data.proxy[query] : foo(this.render_cog(`[${hash}]`))
+            if (render_condition != null)
+                (item as HTMLElement).style.setProperty('display', render_condition ? 'block' : 'none')
+
 
         })
 
@@ -311,7 +345,6 @@ export class CoreWorker extends Tree {
         this.set_params()
         this.set_imports()
         this.set_refs()
-        this.set_conditions()
         this.data.proxy = deep_proxy(this.data.proxy, this.proxy_callback)
         this.set_forms()
         this.set_table()
@@ -323,8 +356,8 @@ export class CoreWorker extends Tree {
     }
     $on_event(query: string, event: string, callback: WorkerCallback) {
         const cog = this.render_cog(query)
-        cog.self?.addEventListener(event, () => {
-            callback(cog)
+        cog.self?.addEventListener(event, (eve) => {
+            callback(cog, eve)
         })
     }
     $pure(query: string, name: string, callback: WorkerCallback) {
@@ -336,7 +369,9 @@ export class CoreWorker extends Tree {
 
         this.data.pure[name.replace(/ /gm, '_')] = () => callback(cog)
     }
-    $proxy(name: string, value: string | boolean | number | null) {
+    $proxy(name: string, value: string | boolean | number | null, json: boolean) {
+        if (json)
+            value = JSON.parse(value as string)
         this.data.proxy[name.replace(/ /gm, '_')] = value
     }
 }

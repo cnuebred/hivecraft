@@ -1,4 +1,4 @@
-type WorkerCallback = (cog: any) => void;
+type WorkerCallback = (cog: any, eve?: Event) => void;
 declare class Tree {
     tree: {};
     data: {
@@ -28,6 +28,6 @@ export declare class CoreWorker extends Tree {
     after_start(): CoreWorker;
     $on_event(query: string, event: string, callback: WorkerCallback): void;
     $pure(query: string, name: string, callback: WorkerCallback): void;
-    $proxy(name: string, value: string | boolean | number | null): void;
+    $proxy(name: string, value: string | boolean | number | null, json: boolean): void;
 }
 export {};
