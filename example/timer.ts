@@ -43,6 +43,7 @@ const set_timer = () => {
     cell.input('minutes', 'number').proxy('minutes')
         .attr({ value: 0, max: 99, min: 0 })
         .on('blur', on_blur_set_range)
+
     cell.input('seconds', 'number').proxy('seconds')
         .attr({ value: 0, max: 59, min: 0 })
         .on('blur', on_blur_set_range)
@@ -69,10 +70,6 @@ const templates = () => {
     for (const preset of temp) {
         const button = cell.add(`button ${preset}min`)
         button.worker.event('click', ({ self, imports, data, ext }) => {
-            console.log(data.proxy)
-            console.log(ext.form)
-            // data.proxy.minutes = self.getAttribute('preset')
-            // ext.form.timer_setter.fields.minutes.value = data.proxy.minutes
             ext.form.timer_setter.proxy.minutes = self.getAttribute('preset')
             imports.SC.render_view_number(data.proxy)
         })
@@ -118,13 +115,30 @@ const header = (core: Core) => {
 }
 const edit = async () => {
     const core = new Core();
+    core.replace = {
+        TITLE: 'Timer Editor',
+        ws_host: 'localhost',
+        ws_port: '3300'
+    }
+
     header(core)
     core.worker.pure('onload_connection_websocket', ({ imports, data }) => {
+        console.log(imports, data)
         data.proxy.editor = true
+        const id = data.params.id || 'zaq12wsx'
         if (data.pure.ws) return
-        data.pure.ws = new WebSocket(imports.SC.ws_url()) //
+        data.pure.ws = new WebSocket(`ws://ws_host:ws_port?id=corn&type=editor`)
         data.pure.ws.onopen = () => {
             data.proxy.ws_open = true
+            data.pure.ws.send(
+                JSON.stringify({
+                    id: id,
+                    type: 'editor'
+                })
+            )
+            data.pure.ws.onmessage = async (msg) => {
+                console.log(await msg.data)
+            }
         }
     })
     core.push(timer())
