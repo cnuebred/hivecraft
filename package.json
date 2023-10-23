@@ -1,16 +1,18 @@
 {
   "name": "@cnuebred/hivecraft",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Hivecraft is an package that allows you to create dynamic web pages using declarative JavaScript code. With Hivecraft, you can easily generate interactive elements such as forms and tables, manipulate them, and create stylish interfaces. The package also provides integration with libraries like axios and CryptoJS, enabling network requests and data encryption.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "cdn/cdn.min.js"
   ],
   "scripts": {
     "prepublish": "npm run build",
     "publish": "npm publish --access public",
-    "build:cdn": "npx tsc -d cdn/cdn.worker.ts --downlevelIteration --target es2021 --moduleResolution node  && minify cdn/cdn.worker.js > cdn/cdn.min.js",
+    "build:cdn": "npx tsc --watch -d cdn/cdn.worker.ts --downlevelIteration --target es2021 --moduleResolution node",
+    "build:minify": "minify cdn/cdn.worker.js > cdn/cdn.min.js",
     "prebuild": "npm run build:cdn",
     "build": "npx tsc",
     "dev:cdn": "nodemon --watch cdn/cdn.worker.ts --exec \"npm run build:cdn \" ",

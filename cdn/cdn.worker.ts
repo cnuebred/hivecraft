@@ -1,3 +1,4 @@
+import { isContinueStatement, isJsxAttribute, isNumericLiteral } from "typescript"
 
 type WorkerCallback = (cog: any, eve?: Event) => void
 
@@ -9,9 +10,10 @@ class Tree {
         refs: {},
         params: {}
     }
-    ext = {
+    ext: { form: any, table: any, templates: { [index: string]: HivecraftTemplate } } = {
         form: {},
         table: {},
+        templates: {},
     }
     imports = {}
     constructor() { }
@@ -44,7 +46,7 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
     const handler: ProxyHandler<Object> = {
         get: (target, prop, receiver) => {
             const value = Reflect.get(target, prop, receiver);
-            if ((prop as string).startsWith('__') && (prop as string).endsWith('__'))
+            if (typeof prop == 'string' && (prop as string).startsWith('__') && (prop as string).endsWith('__'))
                 return value
 
             if (typeof value == 'object' && value !== null) {
@@ -57,9 +59,24 @@ const deep_proxy = (container, callback, only_set: boolean = true) => {
             if ((prop as string).startsWith('__') && (prop as string).endsWith('__'))
                 return true
             if (typeof receiver == 'object' && receiver !== null) {
-                receiver['__hc_parent_name__'] = target['__hc_parent_name__'] 
-                ? `${target['__hc_parent_name__']}.${prop as string}}` 
-                : prop
+                {
+                    if (Array.isArray(receiver))
+                        receiver = receiver.map((item, index) => {
+                            if (!item['__hc_parent_name__'] && typeof item == 'object' && item !== null) {
+                                item['__hc_parent_name__'] = `${prop.toString()}.${index}`
+                            } else if (item['__hc_parent_name__']) {
+                                item['__hc_parent_name__'] = `${prop.toString()}.${index}`
+                            }
+                            return item
+                        })
+
+                    const new_hc_parent = !!target['__hc_parent_name__'] ? `${target['__hc_parent_name__']}.${prop as string}` : prop
+                    Object.defineProperty(receiver, '__hc_parent_name__', {
+                        value: new_hc_parent,
+                        writable: true,
+                    })
+
+                }
             }
             set_nest(target, prop as string, receiver)
             callback(container, target, prop, receiver)
@@ -84,20 +101,20 @@ const proxy_callback_render_attributes = async (container, prop) => {
 
     const items = document.querySelectorAll(`[proxy_attr$="${proxy_data}"]`)
 
-    for(const item of items){
+    for (const item of items) {
         const proxy_attribute = item.getAttribute('proxy_attr') as string
 
         const [attr, value] = proxy_attribute.split(' ')
-        .find(item =>item.split(':')[1].endsWith(proxy_data) )
-        ?.split(':') as string []
+            .find(item => item.split(':')[1].endsWith(proxy_data))
+            ?.split(':') as string[]
 
-        if(!attr || !value) return
+        if (!attr || !value) return
         const origin_proxy_data = item.getAttribute(attr)
 
-        if (!item['origin_proxy_attr'])
-            item['origin_proxy_attr'] = origin_proxy_data
+        if (!item[`origin_proxy_${attr}`])
+            item[`origin_proxy_${attr}`] = origin_proxy_data
 
-        const target_proxy_attr = item['origin_proxy_attr']
+        const target_proxy_attr = item[`origin_proxy_${attr}`]
             .replaceAll(`[[${proxy_data}]]`, read_nest(container, prop))
 
         item.setAttribute(attr, target_proxy_attr)
@@ -110,6 +127,150 @@ const proxy_callback_hivecraft_form = (self, container, prop) => {
     })
 }
 
+
+class HivecraftTemplate {
+    base: HTMLElement
+    parent: HTMLElement
+    template: HTMLElement
+    hivecraft: CoreWorker
+    proxy: any
+    refer: string
+    proxy_name: string
+    last_section: number
+    hooked: boolean = false
+    contains_hooks: string[] = []
+    children: { [index: string]: HivecraftTemplate } = {}
+    events: any = []
+    constructor(base: HTMLElement, self) {
+        this.hivecraft = self
+        this.base = base
+        this.proxy = this.hivecraft.data.proxy
+        this.template = this.get_template(this.base)
+    }
+    setup() {
+        const for_item = this.base.getAttribute('hc-for')
+        const [refer, proxy_name] = for_item?.split(' for ') as string[]
+        this.refer = refer
+        this.proxy_name = proxy_name
+
+        this.base.querySelectorAll('[hc-for]').forEach(item => {
+            item.setAttribute('hc-for-child', '')
+        })
+
+        this.base.style.display = 'none'
+    }
+    render_all() {
+        const list = this.proxy[this.proxy_name]
+        const section = Math.ceil(Math.random() * (10000 - 100) + 100)
+        if (!Array.isArray(list)) return
+        const template_base = this.template
+        list.forEach((item_group, index) => {
+            const index_selector = index.toString() + '_' + section + '_' + this.base.attributes[0].name + this.proxy_name
+            const templates = document.querySelectorAll(`[index^="${index}_"][index$="${this.base.attributes[0].name + this.proxy_name}"]`) as unknown as HTMLElement[]
+            if (templates.length == list.length) {
+                templates.forEach(item => {
+                    item.setAttribute('index', index_selector)
+                    this.single_template(item, item_group)
+                })
+            } else {
+                if (!document.querySelector(`hc-template[v="${this.base.attributes[0].name}"]`)) {
+                    this.create_single_template(template_base, item_group, (element) => {
+                        element.setAttribute('index', index_selector)
+                        if (!this.base.hasAttribute('hc-for-child'))
+                            this.base.before(element)
+                    })
+                }
+                else {
+                    document.querySelectorAll(`hc-template[v="${this.base.attributes[0].name}"]`).forEach((item, index) => {
+                        this.create_single_template(template_base, item_group, async (element) => {
+                            element.setAttribute('index', index_selector)
+                            element.setAttribute('no', index.toString())
+                            item.before(element)
+                        })
+                    })
+                }
+            }
+        })
+        document.querySelectorAll(`[index*="${this.last_section}_${this.base.attributes[0].name + this.proxy_name}"]`).forEach(item => item.remove())
+        this.last_section = section
+        template_base.querySelectorAll('hc-template').forEach(item => {
+            this.hivecraft.ext.templates[item.getAttribute('v') || '']?.render_all()
+        })
+    }
+    replace_in_template(ref_item, template, replacer?: { [index: string]: any } | string | number | null) {
+        if (replacer)
+            ref_item.innerHTML = template.innerHTML.replace(new RegExp(`\\[@\\[${this.refer}\\.(\\w+)\\]\\]`, 'gm'), (_, _1, _2) => {
+                return typeof replacer == 'object' ? read_nest(replacer, _1 as string || '') : replacer
+            })
+    }
+    async set_template_event(element, template){
+        template.querySelectorAll('[eve]').forEach(item => {
+            if (item['events_list'])
+                item['events_list'].forEach(li_event => {
+                    element.querySelectorAll(li_event[1]).forEach(qr_item => {
+                        qr_item['events_list'] = [...item['events_list']]
+                        const event_pack = item['events_list']
+                        event_pack.forEach(event => {
+                            const no = !!element.getAttribute('no') ? `[no="${element.getAttribute('no')}"]` : ''
+                            this.hivecraft.$on_event(
+                                `[index="${element.getAttribute('index')}"]${no} ${event[1]}`,
+                                event[0],
+                                event[2]
+                            )
+                        })
+                    })
+                })
+        })
+    }
+    single_template(element: HTMLElement, template, replacer?: { [index: string]: any } | string | number | null): void {
+        this.replace_in_template(element, template, replacer)
+        this.set_template_event(element, template)
+    }
+    create_single_template(template: HTMLElement, replacer?: { [index: string]: any } | string | number | null, callback?: null | ((element: HTMLElement) => void)): HTMLElement {
+        const new_element = template.cloneNode(true) as HTMLElement
+        if (callback) callback(new_element)
+        this.single_template(new_element, template, replacer)
+        return new_element
+    }
+    get_template(base) {
+        console.log('DONE')
+        const template = this.create_single_template(base, null, (template) => {
+            template.querySelectorAll('[hc-for]').forEach((item, index) => {
+                const template = document.createElement('hc-template')
+                template.setAttribute('v', item.attributes[0].name)
+                item.replaceWith(template)
+            })
+            base.querySelectorAll('[eve]').forEach((item, index) => {
+                if (template.querySelector(`[${item.attributes[0].name}]`))
+                    this.events.push(...item['events_list'])
+            })
+            template.removeAttribute(template.attributes[0].name)
+            template.removeAttribute('hc-for')
+            template.removeAttribute('hc-for-child')
+            template.removeAttribute('style')
+        })
+        return template
+    }
+    render(parent: string, prop: string) {
+        const start = performance.now()
+        const list = this.proxy[this.proxy_name]
+        if (!parent || prop == 'length') {
+            this.render_all()
+        } else {
+            const part_index = parent.split('.').pop()
+            if (!isNaN(Number(part_index))) {
+                const indexed_object = list[Number(part_index)]
+                const templates = document.querySelectorAll(`[index^="${part_index}_"][index$="${this.base.attributes[0].name + this.proxy_name}"]`) as unknown as HTMLElement[]
+
+                if (templates.length != 0)
+                    templates.forEach(item => {
+                        this.single_template(item, this.template, indexed_object)
+                    })
+            }
+        }
+        console.log('render in ', performance.now() - start)
+    }
+}
 
 class HivecraftForm {
     form: HTMLElement
@@ -274,7 +435,7 @@ export class CoreWorker extends Tree {
         super()
     }
     private render_cog = (query) => {
-        const self = document.querySelector(query)
+        const self = document.querySelectorAll(query)
         if (!this.tree[query])
             this.tree[query] = {}
         const cog = {
@@ -286,7 +447,17 @@ export class CoreWorker extends Tree {
         }
         return cog
     }
+    private proxy_callback_render_list = async (container, prop) => {
+        for (const template in this.ext.templates) {
+            const item = this.ext.templates[template]
+            if ((item.proxy_name == prop || (container['__hc_parent_name__'] && container['__hc_parent_name__'].startsWith(item.proxy_name)))) {
+                item.render(container['__hc_parent_name__'], prop)
+            }
+        }
+
+    }
     private proxy_callback = (container, target, prop) => {
+        this.proxy_callback_render_list(container, prop)
         proxy_callback_render_elements(container, prop)
         proxy_callback_render_attributes(container, prop)
         this.set_conditions()
@@ -326,6 +497,14 @@ export class CoreWorker extends Tree {
             this.ext.form[form_name] = form
         })
     }
+    private set_templates() {
+        const for_loop = document.querySelectorAll('[hc-for]')
+        Array.from(for_loop).forEach(item => {
+            const template = new HivecraftTemplate(item as HTMLElement, this)
+            template.setup()
+            this.ext.templates[item.attributes[0].name] = template
+        })
+    }
     private set_table() {
         const tables = document.querySelectorAll('div[table]')
         tables.forEach(divtable => {
@@ -352,22 +531,33 @@ export class CoreWorker extends Tree {
     }
     after_start(): CoreWorker {
         this.set_conditions()
+        this.set_templates()
         return this
     }
-    $on_event(query: string, event: string, callback: WorkerCallback) {
+    $on_event(query: string | HTMLElement, event: string, callback: WorkerCallback, save: boolean = true) {
         const cog = this.render_cog(query)
-        cog.self?.addEventListener(event, (eve) => {
-            callback(cog, eve)
+        cog.self?.forEach((self_item: HTMLElement) => {
+            if (save) {
+                if (!self_item['events_list']) self_item['events_list'] = []
+                self_item['events_list'].push([event, query, callback])
+            }
+            self_item.setAttribute('eve', '')
+            self_item.addEventListener(event, (eve) => {
+                callback({ ...cog, ...{ self: self_item } }, eve)
+            })
+            // self_item[`on${event}`] = (eve) => callback({ ...cog, ...{ self: self_item } }, eve)
         })
     }
     $pure(query: string, name: string, callback: WorkerCallback) {
         const cog = this.render_cog(query)
-        if (name.startsWith('onload_'))
-            callback(cog)
-        if (name.startsWith('hc-if_'))
-            this.data.proxy[name] = callback(cog)
+        cog.self.forEach(self_item => {
+            if (name.startsWith('onload_'))
+                callback({ ...cog, ...{ self: self_item } })
+            if (name.startsWith('hc-if_'))
+                this.data.proxy[name] = callback({ ...cog, ...{ self: self_item } })
 
-        this.data.pure[name.replace(/ /gm, '_')] = () => callback(cog)
+            this.data.pure[name.replace(/ /gm, '_')] = () => callback({ ...cog, ...{ self: self_item } })
+        })
     }
     $proxy(name: string, value: string | boolean | number | null, json: boolean) {
         if (json)

@@ -1,4 +1,4 @@
-import { CellRenderOptionsType, LibType, CoreHtmlConfigRender, CorePdfConfigRender, CellLocation } from "./d"
+import { CellRenderOptionsType, LibType, CoreHtmlConfigRender, CellLocation } from "./d"
 import { CELL_RENDER_OPTIONS_DEFAULT, IMPORT_LIBS_LIST } from './utils'
 import { readFile, writeFile } from "fs/promises"
 import { transform } from "./bundle"
@@ -58,7 +58,6 @@ export class Core extends Cell {
         else {
             if (async) href_lib.attributes.set('$', 'async')
             default_lib_set.type = 'module'
-            // default_lib_set.type = 'text/javascript'
         }
 
         href_lib.attributes.from(default_lib_set)
