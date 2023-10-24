@@ -203,7 +203,8 @@ class HivecraftTemplate {
                 return typeof replacer == 'object' ? read_nest(replacer, _1 as string || '') : replacer
             })
     }
-    async set_template_event(element, template){
+    async set_template_event(element, template) {
+        if (!template.querySelector('[eve]')) return
         template.querySelectorAll('[eve]').forEach(item => {
             if (item['events_list'])
                 item['events_list'].forEach(li_event => {
