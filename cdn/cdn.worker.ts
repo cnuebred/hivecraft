@@ -166,13 +166,6 @@ class HivecraftTemplate {
         const template_base = this.template
         list.forEach((item_group, index) => {
             const index_selector = index.toString() + '_' + section + '_' + this.base.attributes[0].name + this.proxy_name
-            const templates = document.querySelectorAll(`[index^="${index}_"][index$="${this.base.attributes[0].name + this.proxy_name}"]`) as unknown as HTMLElement[]
-            if (templates.length == list.length) {
-                templates.forEach(item => {
-                    item.setAttribute('index', index_selector)
-                    this.single_template(item, item_group)
-                })
-            } else {
                 if (!document.querySelector(`hc-template[v="${this.base.attributes[0].name}"]`)) {
                     this.create_single_template(template_base, item_group, (element) => {
                         element.setAttribute('index', index_selector)
@@ -189,7 +182,6 @@ class HivecraftTemplate {
                         })
                     })
                 }
-            }
         })
         document.querySelectorAll(`[index*="${this.last_section}_${this.base.attributes[0].name + this.proxy_name}"]`).forEach(item => item.remove())
         this.last_section = section
@@ -234,7 +226,6 @@ class HivecraftTemplate {
         return new_element
     }
     get_template(base) {
-        console.log('DONE')
         const template = this.create_single_template(base, null, (template) => {
             template.querySelectorAll('[hc-for]').forEach((item, index) => {
                 const template = document.createElement('hc-template')
@@ -253,7 +244,7 @@ class HivecraftTemplate {
         return template
     }
     render(parent: string, prop: string) {
-        const start = performance.now()
+        //const start = performance.now()
         const list = this.proxy[this.proxy_name]
         if (!parent || prop == 'length') {
             this.render_all()
@@ -269,7 +260,7 @@ class HivecraftTemplate {
                     })
             }
         }
-        console.log('render in ', performance.now() - start)
+        //console.log('render in ', performance.now() - start)
     }
 }
 
