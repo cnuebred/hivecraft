@@ -16,7 +16,7 @@ export class Cell {
         this.#type = value
     }
     #hash: HashType = randomBytes(4).toString('hex')
-    content: Cell[] = [] // private
+    #children: Cell[] = [] // private
     value: string[] = []
     #tag: string = 'div'
     #parent: Cell
@@ -125,7 +125,7 @@ export class Cell {
         const attr = this.attributes.render()
         template.push(`<${this.tag}${attr}${is_single_tag ? ' /' : ''}>`)
 
-        this.content.forEach(item => {
+        this.#children.forEach(item => {
             template.push(item.render(this.#cell_render_options_type) as string)
         })
         if (!is_single_tag)
@@ -169,7 +169,7 @@ export class Cell {
         return cell
     }
     clear(only_text: boolean = false): Cell {
-        this.content = this.content.filter(item => only_text ? !(item.type == 'text') : false)
+        this.#children = this.#children.filter(item => only_text ? !(item.type == 'text') : false)
         return this
     }
     if(condition: (cog: CallbackCog) => boolean, init: boolean = true): Cell {
@@ -189,15 +189,15 @@ export class Cell {
 
 
         if (location == CellLocation.Start) {
-            this.content.splice(0, 0, cell_component)
+            this.#children.splice(0, 0, cell_component)
         }
         else if (location == CellLocation.End) {
-            this.content.push(cell_component)
+            this.#children.push(cell_component)
         }
         else if (location == CellLocation.After && this.parent)
-            this.parent.content.splice(this.parent.content.indexOf(this) + 1, 0, cell_component)
+            this.parent.#children.splice(this.parent.#children.indexOf(this) + 1, 0, cell_component)
         else if (location == CellLocation.Before && this.parent)
-            this.parent.content.splice(this.parent.content.indexOf(this), 0, cell_component)
+            this.parent.#children.splice(this.parent.#children.indexOf(this), 0, cell_component)
 
         return this
     }
@@ -227,7 +227,7 @@ export class Cell {
         if (filter.self)
             callback(this, index)
         filter.self = true
-        this.content.forEach(element => {
+        this.#children.forEach(element => {
             if (!filter?.only || filter?.only == 'text')
                 callback(element, index)
 
@@ -238,9 +238,9 @@ export class Cell {
         })
     }
     find(callback: (item: Cell, index: number) => boolean) {
-        const first_iteration = this.content.find(callback)
+        const first_iteration = this.#children.find(callback)
         if (first_iteration) return first_iteration
-        for (let item of this.content) {
+        for (let item of this.#children) {
             return item.find(callback)
         }
     }
@@ -261,7 +261,7 @@ export class Cell {
         cell_copy.attributes = this.attributes.copy()
         cell_copy.style = this.style.copy()
         cell_copy.worker = this.worker.copy()
-        this.content.forEach((item) => {
+        this.#children.forEach((item) => {
             cell_copy.push(item.copy())
         })
         return cell_copy

@@ -35,6 +35,7 @@ const regex = {
         }
     },
 }
+
 const cleaner = /(?<!\\)(\\)/gm
 const br = /(?<!\\)(\n)/gm
 const hr = /^(?<!\\)(\-{3,})/gm

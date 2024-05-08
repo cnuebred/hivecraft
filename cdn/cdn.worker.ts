@@ -1,5 +1,3 @@
-import { isContinueStatement, isJsxAttribute, isNumericLiteral } from "typescript"
-
 type WorkerCallback = (cog: any, eve?: Event) => void
 
 class Tree {
@@ -21,7 +19,7 @@ class Tree {
 
 const read_nest = (object: { [index: string]: any }, address: string | string[]) => {
     if (typeof address == 'string')
-        address = address.split('.')
+    address = address.split('.')
 
     const address_step = address.shift()
 
@@ -191,8 +189,8 @@ class HivecraftTemplate {
     }
     replace_in_template(ref_item, template, replacer?: { [index: string]: any } | string | number | null) {
         if (replacer)
-            ref_item.innerHTML = template.innerHTML.replace(new RegExp(`\\[@\\[${this.refer}\\.(\\w+)\\]\\]`, 'gm'), (_, _1, _2) => {
-                return typeof replacer == 'object' ? read_nest(replacer, _1 as string || '') : replacer
+            ref_item.innerHTML = template.innerHTML.replace(new RegExp(`\\[@\\[${this.refer}(\\.([\\s\\S]*?))?\\]\\]`, 'gm'), (_, _1, _2, _3) => {
+                return typeof replacer == 'object' ? read_nest(replacer, _2 as string || '') : replacer
             })
     }
     async set_template_event(element, template) {
@@ -263,22 +261,32 @@ class HivecraftTemplate {
         //console.log('render in ', performance.now() - start)
     }
 }
-
 class HivecraftForm {
     form: HTMLElement
     fields: { [index: string]: HTMLElement } = {}
     proxy = deep_proxy({}, (container, target, prop) => {
         proxy_callback_hivecraft_form(this, container, prop)
+        this.set_proxy_values(container, target, prop)
+        // todo proxy duplex
     })
     constructor(form: HTMLElement) {
         this.form = form
         this.init()
     }
+    set_proxy_values(container, target, prop){
+        const inputs = this.form.querySelectorAll(`input[input-proxy="${prop}"],textarea[input-proxy="${prop}"]`)
+        inputs.forEach(input => {
+                input['value'] = read_nest(target, prop)
+        })
+    }
     private init() {
-        const inputs = this.form.querySelectorAll('input[data-input]')
+        const inputs = this.form.querySelectorAll('input[data-input],textarea[data-input]')
         inputs.forEach(input => {
             const name = input.getAttribute('name') || '_'
             const proxy = input.getAttribute('input-proxy')
+            if(input.getAttribute('value'))
+                input['value'] = input.getAttribute('value')
+            
             this.fields[name] = input as HTMLElement
             if (proxy) {
                 this.proxy[proxy] = input['value']
@@ -533,6 +541,7 @@ export class CoreWorker extends Tree {
                 if (!self_item['events_list']) self_item['events_list'] = []
                 self_item['events_list'].push([event, query, callback])
             }
+            self_item['query'] = query
             self_item.setAttribute('eve', '')
             self_item.addEventListener(event, (eve) => {
                 callback({ ...cog, ...{ self: self_item } }, eve)
@@ -543,12 +552,12 @@ export class CoreWorker extends Tree {
     $pure(query: string, name: string, callback: WorkerCallback) {
         const cog = this.render_cog(query)
         cog.self.forEach(self_item => {
+            self_item['query'] = query
             if (name.startsWith('onload_'))
                 callback({ ...cog, ...{ self: self_item } })
             if (name.startsWith('hc-if_'))
                 this.data.proxy[name] = callback({ ...cog, ...{ self: self_item } })
-
-            this.data.pure[name.replace(/ /gm, '_')] = () => callback({ ...cog, ...{ self: self_item } })
+            this.data.pure[name.replace(/ /gm, '_')] = (...args) => callback({ ...cog, ...{ self: self_item } }, ...args)
         })
     }
     $proxy(name: string, value: string | boolean | number | null, json: boolean) {
