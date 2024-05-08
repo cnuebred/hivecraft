@@ -1,4 +1,9 @@
+![image](https://imgur.com/rwjv016.png)
+
 # Hivecraft
+
+[![npm version](https://img.shields.io/npm/v/@cnuebred/hivecraft.svg?logo=npm)](https://www.npmjs.com/package/@cnuebred/hivecraft)
+[![npm downloads](https://img.shields.io/npm/dw/@cnuebred/hivecraft)](https://www.npmjs.com/package/@cnuebred/hivecraft)
 
 The Hivecraft library is a powerful framework that provides a set of classes and utilities for building dynamic and interactive web content. It offers a flexible and intuitive way to create and manipulate cells, allowing developers to construct complex HTML structures with ease. With features such as attribute management, styling options, event handling, and modular components, Hivecraft empowers developers to create sophisticated web applications. This readme file provides an overview of the Hivecraft library, its key components, and how to get started with using it in your projects.
 
@@ -134,7 +139,7 @@ console.log(core.render());
     const core = new Core();
     const header = core.cell()
     
-    core.worker.pure('onload_init', (item) => {
+    core.worker.onload('init', (item) => {
         item.data.proxy.new_number = 20
         item.data.proxy.render_condition = false
     })
@@ -148,8 +153,6 @@ console.log(core.render());
 
     console.log(core.render())
 ```
-
-`onload_` - pure function with this prefix will be ran onload window
 
 This program creates a web page using the Hivecraft library. It creates a header, a main content section, and adds a link to an example website. The generated HTML code is displayed in the console.
 

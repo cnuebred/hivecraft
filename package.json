@@ -11,7 +11,7 @@
 	"scripts": {
 		"prepublish": "npm run build",
 		"publish": "npm publish --access public",
-		"build:cdn": "npx tsc --watch -d cdn/cdn.worker.ts --downlevelIteration --target es2021 --moduleResolution node",
+		"build:cdn": "npx tsc -d cdn/cdn.worker.ts --downlevelIteration --target es2021 --moduleResolution node",
 		"build:minify": "minify cdn/cdn.worker.js > cdn/cdn.min.js",
 		"prebuild": "npm run build:cdn",
 		"build": "npx tsc",
